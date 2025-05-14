@@ -1,0 +1,447 @@
+{
+  "21399_City Council_2025-05-29T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.000000",
+    "last_updated": "2025-05-14T15:42:33.000000",
+    "event_id": "21399",
+    "body": "City Council",
+    "date": "2025-05-29T00:00:00",
+    "time": "1:30 PM",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663511"
+  },
+  "21482_City Council_2025-05-28T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.000000",
+    "last_updated": "2025-05-14T15:42:33.000000",
+    "event_id": "21482",
+    "body": "City Council",
+    "date": "2025-05-28T00:00:00",
+    "time": "1:30 PM",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663520"
+  },
+  "21503_City Council_": {
+    "first_seen": "2025-05-14T15:42:33.000000",
+    "last_updated": "2025-05-14T15:42:33.000000",
+    "event_id": "21503",
+    "body": "City Council",
+    "date": null,
+    "time": null,
+    "status": "new_without_date"
+  },
+  "21503_City Council_2025-06-11T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.416916",
+    "event_id": "21503",
+    "body": "City Council",
+    "date": "2025-06-11T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663525"
+  },
+  "21553_Committee on Housing and Buildings_2025-06-03T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.416967",
+    "event_id": "21553",
+    "body": "Committee on Housing and Buildings",
+    "date": "2025-06-03T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663528"
+  },
+  "21554_Committee on Civil and Human Rights_2025-05-09T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.416990",
+    "event_id": "21554",
+    "body": "Committee on Civil and Human Rights",
+    "date": "2025-05-09T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663532"
+  },
+  "21555_Committee on Small Business_2025-05-09T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417009",
+    "event_id": "21555",
+    "body": "Committee on Small Business",
+    "date": "2025-05-09T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663535"
+  },
+  "21557_Subcommittee on Zoning and Franchises_2025-06-05T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417026",
+    "event_id": "21557",
+    "body": "Subcommittee on Zoning and Franchises",
+    "date": "2025-06-05T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663539"
+  },
+  "21567_Committee on Finance_2025-05-30T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417045",
+    "event_id": "21567",
+    "body": "Committee on Finance",
+    "date": "2025-05-30T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663543"
+  },
+  "21568_Committee on Public Safety_2025-05-29T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417062",
+    "event_id": "21568",
+    "body": "Committee on Public Safety",
+    "date": "2025-05-29T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663547"
+  },
+  "21569_Committee on Finance_2025-05-29T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417075",
+    "event_id": "21569",
+    "body": "Committee on Finance",
+    "date": "2025-05-29T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663550"
+  },
+  "21570_Committee on Sanitation and Solid Waste Management_2025-05-12T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417089",
+    "event_id": "21570",
+    "body": "Committee on Sanitation and Solid Waste Management",
+    "date": "2025-05-12T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663553"
+  },
+  "21571_Committee on Hospitals_2025-05-22T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417104",
+    "event_id": "21571",
+    "body": "Committee on Hospitals",
+    "date": "2025-05-22T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663555"
+  },
+  "21572_Committee on Aging_2025-05-12T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417118",
+    "event_id": "21572",
+    "body": "Committee on Aging",
+    "date": "2025-05-12T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663557"
+  },
+  "21573_Committee on Finance_2025-05-22T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417131",
+    "event_id": "21573",
+    "body": "Committee on Finance",
+    "date": "2025-05-22T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663559"
+  },
+  "21574_Committee on General Welfare_2025-05-16T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417145",
+    "event_id": "21574",
+    "body": "Committee on General Welfare",
+    "date": "2025-05-16T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663561"
+  },
+  "21575_Committee on Finance_2025-05-16T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417158",
+    "event_id": "21575",
+    "body": "Committee on Finance",
+    "date": "2025-05-16T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663563"
+  },
+  "21576_Committee on Children and Youth_2025-05-19T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417171",
+    "event_id": "21576",
+    "body": "Committee on Children and Youth",
+    "date": "2025-05-19T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663565"
+  },
+  "21577_Committee on Finance_2025-05-19T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417186",
+    "event_id": "21577",
+    "body": "Committee on Finance",
+    "date": "2025-05-19T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663567"
+  },
+  "21578_Committee on Education_2025-05-20T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417199",
+    "event_id": "21578",
+    "body": "Committee on Education",
+    "date": "2025-05-20T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663569"
+  },
+  "21579_Committee on Finance_2025-05-20T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417212",
+    "event_id": "21579",
+    "body": "Committee on Finance",
+    "date": "2025-05-20T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663570"
+  },
+  "21580_Committee on Transportation and Infrastructure_2025-05-13T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417230",
+    "event_id": "21580",
+    "body": "Committee on Transportation and Infrastructure",
+    "date": "2025-05-13T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663572"
+  },
+  "21581_Committee on Cultural Affairs, Libraries and International Intergroup Relations_2025-05-21T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417245",
+    "event_id": "21581",
+    "body": "Committee on Cultural Affairs, Libraries and International Intergroup Relations",
+    "date": "2025-05-21T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663574"
+  },
+  "21582_Committee on Finance_2025-05-21T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417260",
+    "event_id": "21582",
+    "body": "Committee on Finance",
+    "date": "2025-05-21T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663576"
+  },
+  "21583_Committee on Mental Health, Disabilities and Addiction_2025-05-23T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417274",
+    "event_id": "21583",
+    "body": "Committee on Mental Health, Disabilities and Addiction",
+    "date": "2025-05-23T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663579"
+  },
+  "21584_Committee on Health_2025-05-23T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417287",
+    "event_id": "21584",
+    "body": "Committee on Health",
+    "date": "2025-05-23T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663580"
+  },
+  "21585_Committee on Parks and Recreation_2025-05-13T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417299",
+    "event_id": "21585",
+    "body": "Committee on Parks and Recreation",
+    "date": "2025-05-13T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663582"
+  },
+  "21586_Committee on Finance_2025-05-13T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417312",
+    "event_id": "21586",
+    "body": "Committee on Finance",
+    "date": "2025-05-13T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663584"
+  },
+  "21587_Committee on Finance_2025-05-23T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417326",
+    "event_id": "21587",
+    "body": "Committee on Finance",
+    "date": "2025-05-23T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663586"
+  },
+  "21588_Committee on Immigration_2025-05-27T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417338",
+    "event_id": "21588",
+    "body": "Committee on Immigration",
+    "date": "2025-05-27T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663588"
+  },
+  "21589_Committee on Finance_2025-05-27T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417351",
+    "event_id": "21589",
+    "body": "Committee on Finance",
+    "date": "2025-05-27T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663590"
+  },
+  "21590_Committee on Criminal Justice_2025-05-27T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417365",
+    "event_id": "21590",
+    "body": "Committee on Criminal Justice",
+    "date": "2025-05-27T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663592"
+  },
+  "21591_Committee on Finance_2025-05-12T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417378",
+    "event_id": "21591",
+    "body": "Committee on Finance",
+    "date": "2025-05-12T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663594"
+  },
+  "21592_Committee on Finance_2025-05-14T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417391",
+    "event_id": "21592",
+    "body": "Committee on Finance",
+    "date": "2025-05-14T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663596"
+  },
+  "21594_Subcommittee on Zoning and Franchises_2025-05-20T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417405",
+    "event_id": "21594",
+    "body": "Subcommittee on Zoning and Franchises",
+    "date": "2025-05-20T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663598"
+  },
+  "21595_Subcommittee on Zoning and Franchises_2025-05-13T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417418",
+    "event_id": "21595",
+    "body": "Subcommittee on Zoning and Franchises",
+    "date": "2025-05-13T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663599"
+  },
+  "21596_Subcommittee on Zoning and Franchises_2025-05-22T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417431",
+    "event_id": "21596",
+    "body": "Subcommittee on Zoning and Franchises",
+    "date": "2025-05-22T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663601"
+  },
+  "21597_Committee on Land Use_2025-05-13T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417445",
+    "event_id": "21597",
+    "body": "Committee on Land Use",
+    "date": "2025-05-13T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663603"
+  },
+  "21598_Committee on Land Use_2025-05-22T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417459",
+    "event_id": "21598",
+    "body": "Committee on Land Use",
+    "date": "2025-05-22T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663605"
+  },
+  "21600_Committee on Housing and Buildings_2025-05-14T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417473",
+    "event_id": "21600",
+    "body": "Committee on Housing and Buildings",
+    "date": "2025-05-14T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663607"
+  },
+  "21601_Committee on Public Housing_2025-05-14T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417487",
+    "event_id": "21601",
+    "body": "Committee on Public Housing",
+    "date": "2025-05-14T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663609"
+  },
+  "21602_Committee on Finance_2025-05-15T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417500",
+    "event_id": "21602",
+    "body": "Committee on Finance",
+    "date": "2025-05-15T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663611"
+  },
+  "21603_Committee on Higher Education_2025-05-15T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417514",
+    "event_id": "21603",
+    "body": "Committee on Higher Education",
+    "date": "2025-05-15T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663612"
+  },
+  "21604_Committee on Governmental Operations, State & Federal Legislation_2025-05-15T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417528",
+    "event_id": "21604",
+    "body": "Committee on Governmental Operations, State & Federal Legislation",
+    "date": "2025-05-15T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663614"
+  },
+  "21613_Committee on General Welfare_2025-06-10T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417548",
+    "event_id": "21613",
+    "body": "Committee on General Welfare",
+    "date": "2025-06-10T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663616"
+  },
+  "21614_Committee on Environmental Protection, Resiliency and Waterfronts_2025-05-07T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417561",
+    "event_id": "21614",
+    "body": "Committee on Environmental Protection, Resiliency and Waterfronts",
+    "date": "2025-05-07T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663618"
+  },
+  "21619_Committee on Education_2025-06-09T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417578",
+    "event_id": "21619",
+    "body": "Committee on Education",
+    "date": "2025-06-09T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663620"
+  },
+  "21620_Committee on Civil and Human Rights_2025-06-09T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417591",
+    "event_id": "21620",
+    "body": "Committee on Civil and Human Rights",
+    "date": "2025-06-09T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663622"
+  },
+  "21622_Committee on Cultural Affairs, Libraries and International Intergroup Relations_2025-06-03T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417605",
+    "event_id": "21622",
+    "body": "Committee on Cultural Affairs, Libraries and International Intergroup Relations",
+    "date": "2025-06-03T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663623"
+  },
+  "21626_Committee on Hospitals_2025-06-10T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417618",
+    "event_id": "21626",
+    "body": "Committee on Hospitals",
+    "date": "2025-06-10T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663625"
+  },
+  "21627_Subcommittee on Zoning and Franchises_2025-05-12T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417633",
+    "event_id": "21627",
+    "body": "Subcommittee on Zoning and Franchises",
+    "date": "2025-05-12T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663627"
+  },
+  "21628_Committee on Land Use_2025-05-12T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417645",
+    "event_id": "21628",
+    "body": "Committee on Land Use",
+    "date": "2025-05-12T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663629"
+  },
+  "21629_Committee on Civil and Human Rights_2025-06-12T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417658",
+    "event_id": "21629",
+    "body": "Committee on Civil and Human Rights",
+    "date": "2025-06-12T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663631"
+  },
+  "21630_Committee on Education_2025-06-12T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417672",
+    "event_id": "21630",
+    "body": "Committee on Education",
+    "date": "2025-06-12T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663632"
+  },
+  "21631_Committee on Veterans_2025-06-10T00:00:00": {
+    "first_seen": "2025-05-14T15:42:33.417684",
+    "event_id": "21631",
+    "body": "Committee on Veterans",
+    "date": "2025-06-10T00:00:00",
+    "status": "unchanged",
+    "last_checked": "2025-05-14T20:19:50.663634"
+  }
+}

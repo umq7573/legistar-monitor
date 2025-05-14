@@ -1,0 +1,72 @@
+name: Check for New Hearings
+
+on:
+  schedule:
+    # Run every day at 8:00 AM UTC
+    - cron: '0 8 * * *'
+  
+  # Allow manual triggering
+  workflow_dispatch:
+
+jobs:
+  check-hearings:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+      
+      - name: Configure API token
+        run: |
+          # Create config.json with the token from secret
+          echo '{
+            "client": "nyc",
+            "token": "${{ secrets.LEGISTAR_API_TOKEN }}"
+          }' > config.json
+      
+      - name: Check for new hearings
+        id: check
+        run: python check_new_hearings.py
+      
+      - name: Generate web page
+        run: python generate_web_page.py --title "NYC Legistar Hearing Monitor"
+      
+      - name: Summarize results
+        run: |
+          echo "==== HEARING MONITOR RESULTS ===="
+          echo "Total changes: ${{ steps.check.outputs.total_changes || 0 }}"
+          echo "New events with dates: ${{ steps.check.outputs.new_with_dates || 0 }}"
+          echo "New events without dates: ${{ steps.check.outputs.new_without_dates || 0 }}"
+          echo "Rescheduled events: ${{ steps.check.outputs.rescheduled || 0 }}"
+          echo "Events with newly confirmed dates: ${{ steps.check.outputs.date_confirmed || 0 }}"
+      
+      - name: Commit changes and push
+        run: |
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions@github.com"
+          
+          # Add the seen events file and web page
+          git add data/seen_events.json
+          git add docs/
+          
+          # Commit changes
+          git commit -m "Update seen events and web page [skip ci]" || echo "No changes to commit"
+          git push
+        
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@4.1.4
+        with:
+          branch: gh-pages
+          folder: docs 

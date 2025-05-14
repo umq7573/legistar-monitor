@@ -1,0 +1,434 @@
+[
+  {
+    "id": 21399,
+    "body": "City Council",
+    "date": "2025-05-29T00:00:00",
+    "time": "1:30 PM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21399_A_City_Council_25-05-29_Council_Agenda.pdf"
+  },
+  {
+    "id": 21482,
+    "body": "City Council",
+    "date": "2025-05-28T00:00:00",
+    "time": "1:30 PM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21482_A_City_Council_25-05-28_Council_Agenda.pdf"
+  },
+  {
+    "id": 21503,
+    "body": "City Council",
+    "date": "2025-06-11T00:00:00",
+    "time": "1:30 PM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/6/21503_A_City_Council_25-06-11_Council_Agenda.pdf"
+  },
+  {
+    "id": 21553,
+    "body": "Committee on Housing and Buildings",
+    "date": "2025-06-03T00:00:00",
+    "time": "10:00 AM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/6/21553_A_Committee_on_Housing_and_Buildings_25-06-03_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21554,
+    "body": "Committee on Civil and Human Rights",
+    "date": "2025-05-09T00:00:00",
+    "time": "1:00 PM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21554_A_Committee_on_Civil_and_Human_Rights_25-05-09_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21555,
+    "body": "Committee on Small Business",
+    "date": "2025-05-09T00:00:00",
+    "time": "1:00 PM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21555_A_Committee_on_Small_Business_25-05-09_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21557,
+    "body": "Subcommittee on Zoning and Franchises",
+    "date": "2025-06-05T00:00:00",
+    "time": "11:00 AM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/6/21557_A_Subcommittee_on_Zoning_and_Franchises_25-06-05_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21567,
+    "body": "Committee on Finance",
+    "date": "2025-05-30T00:00:00",
+    "time": "10:00 AM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21567_A_Committee_on_Finance_25-05-30_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21568,
+    "body": "Committee on Public Safety",
+    "date": "2025-05-29T00:00:00",
+    "time": "10:00 AM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21568_A_Committee_on_Public_Safety_25-05-29_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21569,
+    "body": "Committee on Finance",
+    "date": "2025-05-29T00:00:00",
+    "time": "10:00 AM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21569_A_Committee_on_Finance_25-05-29_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21570,
+    "body": "Committee on Sanitation and Solid Waste Management",
+    "date": "2025-05-12T00:00:00",
+    "time": "10:00 AM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21570_A_Committee_on_Sanitation_and_Solid_Waste_Management_25-05-12_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21571,
+    "body": "Committee on Hospitals",
+    "date": "2025-05-22T00:00:00",
+    "time": "10:00 AM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21571_A_Committee_on_Hospitals_25-05-22_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21572,
+    "body": "Committee on Aging",
+    "date": "2025-05-12T00:00:00",
+    "time": "12:00 PM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21572_A_Committee_on_Aging_25-05-12_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21573,
+    "body": "Committee on Finance",
+    "date": "2025-05-22T00:00:00",
+    "time": "10:00 AM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21573_A_Committee_on_Finance_25-05-22_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21574,
+    "body": "Committee on General Welfare",
+    "date": "2025-05-16T00:00:00",
+    "time": "10:00 AM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21574_A_Committee_on_General_Welfare_25-05-16_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21575,
+    "body": "Committee on Finance",
+    "date": "2025-05-16T00:00:00",
+    "time": "10:00 AM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21575_A_Committee_on_Finance_25-05-16_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21576,
+    "body": "Committee on Children and Youth",
+    "date": "2025-05-19T00:00:00",
+    "time": "10:00 AM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21576_A_Committee_on_Children_and_Youth_25-05-19_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21577,
+    "body": "Committee on Finance",
+    "date": "2025-05-19T00:00:00",
+    "time": "10:00 AM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21577_A_Committee_on_Finance_25-05-19_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21578,
+    "body": "Committee on Education",
+    "date": "2025-05-20T00:00:00",
+    "time": "10:00 AM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21578_A_Committee_on_Education_25-05-20_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21579,
+    "body": "Committee on Finance",
+    "date": "2025-05-20T00:00:00",
+    "time": "10:00 AM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21579_A_Committee_on_Finance_25-05-20_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21580,
+    "body": "Committee on Transportation and Infrastructure",
+    "date": "2025-05-13T00:00:00",
+    "time": "10:00 AM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21580_A_Committee_on_Transportation_and_Infrastructure_25-05-13_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21581,
+    "body": "Committee on Cultural Affairs, Libraries and International Intergroup Relations",
+    "date": "2025-05-21T00:00:00",
+    "time": "10:00 AM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21581_A_Committee_on_Cultural_Affairs%2C_Libraries_and_International_Intergroup_Relations_25-05-21_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21582,
+    "body": "Committee on Finance",
+    "date": "2025-05-21T00:00:00",
+    "time": "10:00 AM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21582_A_Committee_on_Finance_25-05-21_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21583,
+    "body": "Committee on Mental Health, Disabilities and Addiction",
+    "date": "2025-05-23T00:00:00",
+    "time": "10:00 AM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21583_A_Committee_on_Mental_Health%2C_Disabilities_and_Addiction_25-05-23_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21584,
+    "body": "Committee on Health",
+    "date": "2025-05-23T00:00:00",
+    "time": "10:00 AM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21584_A_Committee_on_Health_25-05-23_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21585,
+    "body": "Committee on Parks and Recreation",
+    "date": "2025-05-13T00:00:00",
+    "time": "12:00 PM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21585_A_Committee_on_Parks_and_Recreation_25-05-13_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21586,
+    "body": "Committee on Finance",
+    "date": "2025-05-13T00:00:00",
+    "time": "10:00 AM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21586_A_Committee_on_Finance_25-05-13_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21587,
+    "body": "Committee on Finance",
+    "date": "2025-05-23T00:00:00",
+    "time": "10:00 AM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21587_A_Committee_on_Finance_25-05-23_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21588,
+    "body": "Committee on Immigration",
+    "date": "2025-05-27T00:00:00",
+    "time": "12:00 PM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21588_A_Committee_on_Immigration_25-05-27_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21589,
+    "body": "Committee on Finance",
+    "date": "2025-05-27T00:00:00",
+    "time": "10:00 AM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21589_A_Committee_on_Finance_25-05-27_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21590,
+    "body": "Committee on Criminal Justice",
+    "date": "2025-05-27T00:00:00",
+    "time": "10:00 AM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21590_A_Committee_on_Criminal_Justice_25-05-27_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21591,
+    "body": "Committee on Finance",
+    "date": "2025-05-12T00:00:00",
+    "time": "10:00 AM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21591_A_Committee_on_Finance_25-05-12_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21592,
+    "body": "Committee on Finance",
+    "date": "2025-05-14T00:00:00",
+    "time": "10:00 AM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21592_A_Committee_on_Finance_25-05-14_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21594,
+    "body": "Subcommittee on Zoning and Franchises",
+    "date": "2025-05-20T00:00:00",
+    "time": "11:00 AM",
+    "location": "250 Broadway - Committee Room, 16th Floor",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21594_A_Subcommittee_on_Zoning_and_Franchises_25-05-20_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21595,
+    "body": "Subcommittee on Zoning and Franchises",
+    "date": "2025-05-13T00:00:00",
+    "time": "11:30 AM",
+    "location": "Committee Room - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21595_A_Subcommittee_on_Zoning_and_Franchises_25-05-13_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21596,
+    "body": "Subcommittee on Zoning and Franchises",
+    "date": "2025-05-22T00:00:00",
+    "time": "11:00 AM",
+    "location": "250 Broadway - Committee Room, 16th Floor",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21596_A_Subcommittee_on_Zoning_and_Franchises_25-05-22_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21597,
+    "body": "Committee on Land Use",
+    "date": "2025-05-13T00:00:00",
+    "time": "11:45 AM",
+    "location": "Committee Room - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21597_A_Committee_on_Land_Use_25-05-13_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21598,
+    "body": "Committee on Land Use",
+    "date": "2025-05-22T00:00:00",
+    "time": "11:30 AM",
+    "location": "250 Broadway - Committee Room, 16th Floor",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21598_A_Committee_on_Land_Use_25-05-22_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21600,
+    "body": "Committee on Housing and Buildings",
+    "date": "2025-05-14T00:00:00",
+    "time": "10:00 AM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21600_A_Committee_on_Housing_and_Buildings_25-05-14_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21601,
+    "body": "Committee on Public Housing",
+    "date": "2025-05-14T00:00:00",
+    "time": "12:00 PM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21601_A_Committee_on_Public_Housing_25-05-14_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21602,
+    "body": "Committee on Finance",
+    "date": "2025-05-15T00:00:00",
+    "time": "10:00 AM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21602_A_Committee_on_Finance_25-05-15_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21603,
+    "body": "Committee on Higher Education",
+    "date": "2025-05-15T00:00:00",
+    "time": "10:00 AM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21603_A_Committee_on_Higher_Education_25-05-15_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21604,
+    "body": "Committee on Governmental Operations, State & Federal Legislation",
+    "date": "2025-05-15T00:00:00",
+    "time": "12:00 PM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21604_A_Committee_on_Governmental_Operations%2C_State___Federal_Legislation_25-05-15_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21613,
+    "body": "Committee on General Welfare",
+    "date": "2025-06-10T00:00:00",
+    "time": "10:00 AM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/6/21613_A_Committee_on_General_Welfare_25-06-10_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21614,
+    "body": "Committee on Environmental Protection, Resiliency and Waterfronts",
+    "date": "2025-05-07T00:00:00",
+    "time": "1:00 PM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21614_A_Committee_on_Environmental_Protection%2C_Resiliency_and_Waterfronts_25-05-07_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21619,
+    "body": "Committee on Education",
+    "date": "2025-06-09T00:00:00",
+    "time": "1:00 PM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/6/21619_A_Committee_on_Education_25-06-09_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21620,
+    "body": "Committee on Civil and Human Rights",
+    "date": "2025-06-09T00:00:00",
+    "time": "1:00 PM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/6/21620_A_Committee_on_Civil_and_Human_Rights_25-06-09_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21622,
+    "body": "Committee on Cultural Affairs, Libraries and International Intergroup Relations",
+    "date": "2025-06-03T00:00:00",
+    "time": "1:00 PM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/6/21622_A_Committee_on_Cultural_Affairs%2C_Libraries_and_International_Intergroup_Relations_25-06-03_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21626,
+    "body": "Committee on Hospitals",
+    "date": "2025-06-10T00:00:00",
+    "time": "1:00 PM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/6/21626_A_Committee_on_Hospitals_25-06-10_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21627,
+    "body": "Subcommittee on Zoning and Franchises",
+    "date": "2025-05-12T00:00:00",
+    "time": "3:00 PM",
+    "location": "Committee Room - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21627_A_Subcommittee_on_Zoning_and_Franchises_25-05-12_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21628,
+    "body": "Committee on Land Use",
+    "date": "2025-05-12T00:00:00",
+    "time": "3:15 PM",
+    "location": "Committee Room - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/5/21628_A_Committee_on_Land_Use_25-05-12_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21629,
+    "body": "Committee on Civil and Human Rights",
+    "date": "2025-06-12T00:00:00",
+    "time": "1:00 PM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/6/21629_A_Committee_on_Civil_and_Human_Rights_25-06-12_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21630,
+    "body": "Committee on Education",
+    "date": "2025-06-12T00:00:00",
+    "time": "1:00 PM",
+    "location": "Council Chambers - City Hall",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/6/21630_A_Committee_on_Education_25-06-12_Committee_Agenda.pdf"
+  },
+  {
+    "id": 21631,
+    "body": "Committee on Veterans",
+    "date": "2025-06-10T00:00:00",
+    "time": "11:00 AM",
+    "location": "250 Broadway - Committee Room, 14th Floor",
+    "agenda_url": "https://nyc.legistar1.com/nyc/meetings/2025/6/21631_A_Committee_on_Veterans_25-06-10_Committee_Agenda.pdf"
+  }
+]
