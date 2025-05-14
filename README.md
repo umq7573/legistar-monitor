@@ -21,7 +21,6 @@ This repository includes a utility to automatically monitor for new hearings and
 ### Setting Up the Hearing Monitor
 
 1. **Configure your API token**:
-   - Edit `config.json` to include your client identifier and API token for local testing
    - Add your API token as a repository secret in GitHub named `LEGISTAR_API_TOKEN`
 
 2. **Enable GitHub Pages**:
