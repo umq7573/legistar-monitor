@@ -1,0 +1,53 @@
+== Events Without Dates (Query: EventDate eq null) ==
+No specific examples found or query returned empty.
+
+== Events Without Dates (Fallback: Broad Recent Query) ==
+No specific examples found or query returned empty.
+
+== Investigation of Deferred/Rescheduled: Committee on Civil and Human Rights (June 2025) ==
+Example 1:
+{
+  "EventId": 21554,
+  "EventGuid": "3A7A92BE-F12E-41C6-A670-6D8D5FF81A98",
+  "EventBodyName": "Committee on Civil and Human Rights",
+  "EventDate": "2025-05-09T00:00:00",
+  "EventTime": "1:00 PM",
+  "EventAgendaStatusName": "Final",
+  "EventMinutesStatusName": "Final",
+  "EventLocation": "Council Chambers - City Hall",
+  "EventComment": "Jointly with the Committee on Small Business.",
+  "EventLastModifiedUtc": "2025-05-09T20:10:22.533",
+  "EventAgendaFile": "https://nyc.legistar1.com/nyc/meetings/2025/5/21554_A_Committee_on_Civil_and_Human_Rights_25-05-09_Committee_Agenda.pdf"
+}
+
+Example 2:
+{
+  "EventId": 21620,
+  "EventGuid": "025DBD59-A1F8-448D-A645-8A6B63F8F37F",
+  "EventBodyName": "Committee on Civil and Human Rights",
+  "EventDate": "2025-06-09T00:00:00",
+  "EventTime": "1:00 PM",
+  "EventAgendaStatusName": "Deferred",
+  "EventMinutesStatusName": "Deferred",
+  "EventLocation": "Council Chambers - City Hall",
+  "EventComment": "Jointly with the Committee on Education",
+  "EventLastModifiedUtc": "2025-04-29T20:35:55.8",
+  "EventAgendaFile": "https://nyc.legistar1.com/nyc/meetings/2025/6/21620_A_Committee_on_Civil_and_Human_Rights_25-06-09_Committee_Agenda.pdf"
+}
+
+Example 3:
+{
+  "EventId": 21629,
+  "EventGuid": "56AE4D6B-E974-403C-88B3-B3EEE667F57E",
+  "EventBodyName": "Committee on Civil and Human Rights",
+  "EventDate": "2025-06-12T00:00:00",
+  "EventTime": "1:00 PM",
+  "EventAgendaStatusName": "Final",
+  "EventMinutesStatusName": "Draft",
+  "EventLocation": "Council Chambers - City Hall",
+  "EventComment": "Jointly with the Committee on Education",
+  "EventLastModifiedUtc": "2025-05-20T16:11:15.687",
+  "EventAgendaFile": "https://nyc.legistar1.com/nyc/meetings/2025/6/21629_A_Committee_on_Civil_and_Human_Rights_25-06-12_Committee_Agenda.pdf"
+}
+
+

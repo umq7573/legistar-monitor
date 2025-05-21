@@ -1,0 +1,84 @@
+== Events with EventDate eq null ==
+No results found or error occurred.
+
+== Events for 'Committee on Civil and Human Rights' in June 2025 ==
+[
+  {
+    "EventId": 21620,
+    "EventGuid": "025DBD59-A1F8-448D-A645-8A6B63F8F37F",
+    "EventLastModifiedUtc": "2025-04-29T20:35:55.8",
+    "EventRowVersion": "AAAAAOfGB00=",
+    "EventBodyId": 5235,
+    "EventBodyName": "Committee on Civil and Human Rights",
+    "EventDate": "2025-06-09T00:00:00",
+    "EventTime": "1:00 PM",
+    "EventVideoStatus": "Public",
+    "EventAgendaStatusId": 4,
+    "EventAgendaStatusName": "Deferred",
+    "EventMinutesStatusId": 4,
+    "EventMinutesStatusName": "Deferred",
+    "EventLocation": "Council Chambers - City Hall",
+    "EventAgendaFile": "https://nyc.legistar1.com/nyc/meetings/2025/6/21620_A_Committee_on_Civil_and_Human_Rights_25-06-09_Committee_Agenda.pdf",
+    "EventMinutesFile": null,
+    "EventAgendaLastPublishedUTC": "2025-04-29T20:35:55.697",
+    "EventMinutesLastPublishedUTC": null,
+    "EventComment": "Jointly with the Committee on Education",
+    "EventVideoPath": null,
+    "EventMedia": null,
+    "EventInSiteURL": "https://nyc.legistar.com/MeetingDetail.aspx?LEGID=21620&GID=61&G=2FD004F1-D85B-4588-A648-0A736C77D6E3",
+    "EventItems": []
+  },
+  {
+    "EventId": 21629,
+    "EventGuid": "56AE4D6B-E974-403C-88B3-B3EEE667F57E",
+    "EventLastModifiedUtc": "2025-05-20T16:11:15.687",
+    "EventRowVersion": "AAAAAOfHcBI=",
+    "EventBodyId": 5235,
+    "EventBodyName": "Committee on Civil and Human Rights",
+    "EventDate": "2025-06-12T00:00:00",
+    "EventTime": "1:00 PM",
+    "EventVideoStatus": "Public",
+    "EventAgendaStatusId": 2,
+    "EventAgendaStatusName": "Final",
+    "EventMinutesStatusId": 1,
+    "EventMinutesStatusName": "Draft",
+    "EventLocation": "Council Chambers - City Hall",
+    "EventAgendaFile": "https://nyc.legistar1.com/nyc/meetings/2025/6/21629_A_Committee_on_Civil_and_Human_Rights_25-06-12_Committee_Agenda.pdf",
+    "EventMinutesFile": null,
+    "EventAgendaLastPublishedUTC": "2025-05-20T16:11:15.64",
+    "EventMinutesLastPublishedUTC": null,
+    "EventComment": "Jointly with the Committee on Education",
+    "EventVideoPath": null,
+    "EventMedia": null,
+    "EventInSiteURL": "https://nyc.legistar.com/MeetingDetail.aspx?LEGID=21629&GID=61&G=2FD004F1-D85B-4588-A648-0A736C77D6E3",
+    "EventItems": []
+  }
+]
+
+== Details for EventId 21620 (deferred example) ==
+{
+  "EventId": 21620,
+  "EventGuid": "025DBD59-A1F8-448D-A645-8A6B63F8F37F",
+  "EventLastModifiedUtc": "2025-04-29T20:35:55.8",
+  "EventRowVersion": "AAAAAOfGB00=",
+  "EventBodyId": 5235,
+  "EventBodyName": "Committee on Civil and Human Rights",
+  "EventDate": "2025-06-09T00:00:00",
+  "EventTime": "1:00 PM",
+  "EventVideoStatus": "Public",
+  "EventAgendaStatusId": 4,
+  "EventAgendaStatusName": "Deferred",
+  "EventMinutesStatusId": 4,
+  "EventMinutesStatusName": "Deferred",
+  "EventLocation": "Council Chambers - City Hall",
+  "EventAgendaFile": "https://nyc.legistar1.com/nyc/meetings/2025/6/21620_A_Committee_on_Civil_and_Human_Rights_25-06-09_Committee_Agenda.pdf",
+  "EventMinutesFile": null,
+  "EventAgendaLastPublishedUTC": "2025-04-29T20:35:55.697",
+  "EventMinutesLastPublishedUTC": null,
+  "EventComment": "Jointly with the Committee on Education",
+  "EventVideoPath": null,
+  "EventMedia": null,
+  "EventInSiteURL": "https://nyc.legistar.com/MeetingDetail.aspx?LEGID=21620&GID=61&G=2FD004F1-D85B-4588-A648-0A736C77D6E3",
+  "EventItems": []
+}
+

@@ -1,0 +1,25 @@
+{
+  "notification_method": "file",
+  "email": {
+    "enabled": false,
+    "smtp_server": "smtp.gmail.com",
+    "smtp_port": 587,
+    "username": "",
+    "password": "",
+    "from_email": "",
+    "to_emails": []
+  },
+  "github_pages": {
+    "enabled": true,
+    "title": "Legistar Hearing Monitor",
+    "description": "Automatic monitoring of legislative hearings",
+    "max_history_items": 50
+  },
+  "preferences": {
+    "notify_new_with_dates": true,
+    "notify_new_without_dates": true,
+    "notify_rescheduled": true,
+    "notify_date_confirmed": true,
+    "send_summary_only": false
+  }
+}

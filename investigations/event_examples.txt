@@ -1,0 +1,115 @@
+== Deferred Hearings ==
+Example 1:
+{
+  "EventId": 19709,
+  "EventBodyName": "Subcommittee on Zoning and Franchises",
+  "EventDate": "2023-01-17T00:00:00",
+  "EventTime": "10:00 AM",
+  "EventAgendaStatusName": "Deferred",
+  "EventComment": null,
+  "EventAgendaFile": "https://nyc.legistar1.com/nyc/meetings/2023/1/19709_A_Subcommittee_on_Zoning_and_Franchises_23-01-17_Committee_Green_Sheet.pdf"
+}
+
+Example 2:
+{
+  "EventId": 19719,
+  "EventBodyName": "Committee on Public Safety",
+  "EventDate": "2023-01-23T00:00:00",
+  "EventTime": "10:00 AM",
+  "EventAgendaStatusName": "Deferred",
+  "EventComment": null,
+  "EventAgendaFile": "https://nyc.legistar1.com/nyc/meetings/2023/1/19719_A_Committee_on_Public_Safety_23-01-23_Committee_Green_Sheet.pdf"
+}
+
+Example 3:
+{
+  "EventId": 19738,
+  "EventBodyName": "Committee on Health",
+  "EventDate": "2023-01-12T00:00:00",
+  "EventTime": "1:00 PM",
+  "EventAgendaStatusName": "Deferred",
+  "EventComment": "Jointly with the Committee on Oversight and Investigations and the Committee on Consumer and Worker Protection",
+  "EventAgendaFile": "https://nyc.legistar1.com/nyc/meetings/2023/1/19738_A_Committee_on_Health_23-01-12_Committee_Green_Sheet.pdf"
+}
+
+Example 4:
+{
+  "EventId": 19739,
+  "EventBodyName": "Committee on Consumer and Worker Protection",
+  "EventDate": "2023-01-12T00:00:00",
+  "EventTime": "1:00 PM",
+  "EventAgendaStatusName": "Deferred",
+  "EventComment": "Jointly with the Committee on Health and the Committee on Oversight and Investigations",
+  "EventAgendaFile": "https://nyc.legistar1.com/nyc/meetings/2023/1/19739_A_Committee_on_Consumer_and_Worker_Protection_23-01-12_Committee_Green_Sheet.pdf"
+}
+
+Example 5:
+{
+  "EventId": 19740,
+  "EventBodyName": "Committee on Oversight and Investigations",
+  "EventDate": "2023-01-12T00:00:00",
+  "EventTime": "1:00 PM",
+  "EventAgendaStatusName": "Deferred",
+  "EventComment": "Jointly with the Committee on Health and the Committee on Consumer and Worker Protection.",
+  "EventAgendaFile": "https://nyc.legistar1.com/nyc/meetings/2023/1/19740_A_Committee_on_Oversight_and_Investigations_23-01-12_Committee_Green_Sheet.pdf"
+}
+
+== Hearings Without Dates ==
+No examples found.
+
+== Joint Hearings ==
+Example 1:
+{
+  "EventId": 19727,
+  "EventBodyName": "Committee on Youth Services",
+  "EventDate": "2023-01-30T00:00:00",
+  "EventTime": "1:00 PM",
+  "EventAgendaStatusName": "Final",
+  "EventComment": "Jointly with the Committee on Aging and the Committee on Contracts.",
+  "EventAgendaFile": "https://nyc.legistar1.com/nyc/meetings/2023/1/19727_A_Committee_on_Youth_Services_23-01-30_Committee_Green_Sheet.pdf"
+}
+
+Example 2:
+{
+  "EventId": 19728,
+  "EventBodyName": "Committee on Aging",
+  "EventDate": "2023-01-30T00:00:00",
+  "EventTime": "1:00 PM",
+  "EventAgendaStatusName": "Final",
+  "EventComment": "Jointly with the Committee on Youth Services and the Committee on Contracts",
+  "EventAgendaFile": "https://nyc.legistar1.com/nyc/meetings/2023/1/19728_A_Committee_on_Aging_23-01-30_Committee_Green_Sheet.pdf"
+}
+
+Example 3:
+{
+  "EventId": 19729,
+  "EventBodyName": "Committee on Contracts",
+  "EventDate": "2023-01-30T00:00:00",
+  "EventTime": "1:00 PM",
+  "EventAgendaStatusName": "Final",
+  "EventComment": "Jointly with the Committee on Youth Services and the Committee on Aging",
+  "EventAgendaFile": "https://nyc.legistar1.com/nyc/meetings/2023/1/19729_A_Committee_on_Contracts_23-01-30_Committee_Green_Sheet.pdf"
+}
+
+Example 4:
+{
+  "EventId": 19738,
+  "EventBodyName": "Committee on Health",
+  "EventDate": "2023-01-12T00:00:00",
+  "EventTime": "1:00 PM",
+  "EventAgendaStatusName": "Deferred",
+  "EventComment": "Jointly with the Committee on Oversight and Investigations and the Committee on Consumer and Worker Protection",
+  "EventAgendaFile": "https://nyc.legistar1.com/nyc/meetings/2023/1/19738_A_Committee_on_Health_23-01-12_Committee_Green_Sheet.pdf"
+}
+
+Example 5:
+{
+  "EventId": 19739,
+  "EventBodyName": "Committee on Consumer and Worker Protection",
+  "EventDate": "2023-01-12T00:00:00",
+  "EventTime": "1:00 PM",
+  "EventAgendaStatusName": "Deferred",
+  "EventComment": "Jointly with the Committee on Health and the Committee on Oversight and Investigations",
+  "EventAgendaFile": "https://nyc.legistar1.com/nyc/meetings/2023/1/19739_A_Committee_on_Consumer_and_Worker_Protection_23-01-12_Committee_Green_Sheet.pdf"
+}
+
