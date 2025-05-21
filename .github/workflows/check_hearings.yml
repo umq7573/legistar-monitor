@@ -19,9 +19,6 @@ jobs:
         uses: actions/checkout@v3
         # This checks out the code (python scripts, etc.) from the branch that triggered the workflow
 
-      # Removed step that attempted to restore seen_events.json from gh-pages
-      # The check_new_hearings.py script will create data/ and seen_events.json if they don't exist.
-        
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -59,9 +56,11 @@ jobs:
       
       - name: Stage data files for gh-pages deployment
         run: |
+          mkdir -p data # Ensure data directory exists locally for the script outputs
           mkdir -p docs/data # Ensure target directory exists within docs
-          cp data/seen_events.json docs/data/seen_events.json
-          cp data/processed_events_for_web.json docs/data/processed_events_for_web.json # For debugging or if needed by a more complex page
+          # cp data/seen_events.json docs/data/seen_events.json # DO NOT COPY seen_events.json
+          # Copy processed_events_for_web.json for potential debugging on gh-pages, or remove if not needed.
+          cp data/processed_events_for_web.json docs/data/processed_events_for_web.json 
         
       - name: Create .nojekyll file
         run: |
