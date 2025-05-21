@@ -115,7 +115,9 @@ def load_seen_events():
                 "current_status": "active", # Default for migrated entries, will be re-evaluated
                 "original_event_details_if_rescheduled": None,
                 "rescheduled_event_details_if_deferred": None,
-                "processing_tags": ['migrated_from_old_format']
+                "processing_tags": ['migrated_from_old_format'],
+                "last_alert_type": "new", # Initialize for migrated entries
+                "last_alert_timestamp": first_seen_timestamp # Initialize for migrated entries
             }
             migrated_data[actual_event_id_str] = new_migrated_entry
             logger.info(f"Migrated old entry for Event ID {actual_event_id_str} to new format.")
@@ -170,41 +172,23 @@ def extract_topic_from_items(event_items):
     return "Meeting details to be determined" # Final fallback
 
 def fetch_events_from_api(api):
-    """Fetch events from the Legistar API based on configured lookback and augment with meeting topic."""
+    """Fetch events from the Legistar API based on configured lookback."""
     today = datetime.now()
     start_date = (today - timedelta(days=APP_CONFIG['lookback_days']))
     
     logger.info(f"Fetching events from {start_date.date()} to indefinite future.")
     
     api_events = api.get_events(
-        top=1000,
-        date_range=(start_date, None)
+        top=1000, # Page size for API calls, LegistarAPI handles full pagination
+        date_range=(start_date, None) # None as end_date for open-ended future
     )
     
     if not api_events:
         logger.warning("No events found from API for the given date range.")
         return []
     
-    logger.info(f"Fetched {len(api_events)} raw events from API. Now augmenting with meeting topics...")
-    
-    augmented_events = []
-    for event_obj in api_events:
-        event_id = event_obj.get("EventId")
-        if event_id:
-            try:
-                event_items = api.get_event_items(event_id)
-                topic = extract_topic_from_items(event_items)
-                event_obj["SyntheticMeetingTopic"] = topic
-                # logger.debug(f"EventID {event_id}, Topic: {topic}")
-            except Exception as e:
-                logger.error(f"Error fetching or processing event items for EventId {event_id}: {e}")
-                event_obj["SyntheticMeetingTopic"] = "Error retrieving topic"
-        else:
-            event_obj["SyntheticMeetingTopic"] = "Meeting Topic Not Available (No EventId)"
-        augmented_events.append(event_obj)
-        
-    logger.info(f"Augmented {len(augmented_events)} events with SyntheticMeetingTopic.")
-    return augmented_events
+    logger.info(f"Fetched {len(api_events)} raw events from API.")
+    return api_events
 
 def initialize_seen_event_entry(event_obj, current_time_iso):
     """Creates a new entry for seen_events.json based on the new data model."""
@@ -265,7 +249,7 @@ def string_similarity(s1, s2):
     s2 = s2 or ""
     return difflib.SequenceMatcher(None, s1, s2).ratio()
 
-def process_event_changes(api_events, seen_events_db):
+def process_event_changes(api_events, seen_events_db, api):
     logger.info("Starting processing of event changes...")
     current_run_iso_time = datetime.now().isoformat()
     
@@ -291,6 +275,16 @@ def process_event_changes(api_events, seen_events_db):
             seen_events_db[event_id]["processing_tags"].append('newly_added')
             newly_added_event_ids_this_run.append(event_id)
             logger.info(f"New event added: ID {event_id} - {current_event_obj.get('EventBodyName')}")
+
+            # Fetch and store SyntheticMeetingTopic for this NEW event
+            try:
+                event_items = api.get_event_items(int(event_id)) # EventId for API is int
+                topic = extract_topic_from_items(event_items)
+                seen_events_db[event_id]["event_data"]["SyntheticMeetingTopic"] = topic
+                logger.info(f"Fetched topic for new event {event_id}: '{topic}'")
+            except Exception as e:
+                logger.error(f"Error fetching or processing event items for new EventId {event_id}: {e}")
+                seen_events_db[event_id]["event_data"]["SyntheticMeetingTopic"] = "Error retrieving topic"
 
             # If a new event is ALREADY deferred when first seen (unlikely, but handle)
             if is_deferred_api:
@@ -454,8 +448,22 @@ def process_event_changes(api_events, seen_events_db):
             # No match found for this deferred_entry in this run.
             # Check if grace period for matching has expired.
             grace_period_days = APP_CONFIG.get('deferred_match_grace_period_days', DEFAULT_DEFERRED_MATCH_GRACE_PERIOD_DAYS)
+            
+            # Safeguard: Ensure last_alert_timestamp exists and is valid before parsing
+            last_alert_ts_str = deferred_entry.get("last_alert_timestamp")
+            if not last_alert_ts_str:
+                logger.warning(f"EventId {deferred_event_id} (deferred) is missing 'last_alert_timestamp'. Cannot check grace period. Entry: {deferred_entry}")
+                # Optionally, you could decide to advance its status here if it's old and problematic,
+                # or simply skip as done below.
+                continue # Skip grace period check for this event if timestamp is missing
+
+            try:
+                deferred_timestamp_dt = datetime.fromisoformat(last_alert_ts_str.replace('Z', '+00:00'))
+            except ValueError:
+                logger.warning(f"EventId {deferred_event_id} (deferred) has an invalid 'last_alert_timestamp' format: {last_alert_ts_str}. Cannot check grace period.")
+                continue # Skip grace period check for this event if timestamp is invalid
+
             # last_alert_timestamp for a deferred event is when it became deferred.
-            deferred_timestamp_dt = datetime.fromisoformat(deferred_entry["last_alert_timestamp"])
             if datetime.now() > deferred_timestamp_dt + timedelta(days=grace_period_days):
                 if deferred_entry["current_status"] == "deferred_pending_match": # Only transition if it's still pending
                     deferred_entry["current_status"] = "deferred_nomatch_internal"
@@ -670,7 +678,7 @@ def main():
         return
 
     updated_seen_events_db, newly_added_ids, newly_deferred_ids, newly_rescheduled_pairs = \
-        process_event_changes(fetched_api_events, seen_events)
+        process_event_changes(fetched_api_events, seen_events, api)
     
     save_seen_events(updated_seen_events_db)
     logger.info(f"Saved {len(updated_seen_events_db)} events to history file.")
