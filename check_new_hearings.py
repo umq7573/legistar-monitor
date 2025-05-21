@@ -22,7 +22,6 @@ CONFIG_FILE = "config.json" # Expects config.json in the root directory
 # Default values, can be overridden by config.json
 DEFAULT_LOOKBACK_DAYS = 365
 DEFAULT_DEFERRED_MATCH_GRACE_PERIOD_DAYS = 60
-DEFAULT_DEFERRED_MATCH_COMMENT_SIMILARITY_THRESHOLD = 0.85
 
 # Global config dictionary
 APP_CONFIG = {}
@@ -32,7 +31,7 @@ def load_app_config():
     config_defaults = {
         "lookback_days": DEFAULT_LOOKBACK_DAYS,
         "deferred_match_grace_period_days": DEFAULT_DEFERRED_MATCH_GRACE_PERIOD_DAYS,
-        "deferred_match_comment_similarity_threshold": DEFAULT_DEFERRED_MATCH_COMMENT_SIMILARITY_THRESHOLD,
+        # "deferred_match_comment_similarity_threshold": DEFAULT_DEFERRED_MATCH_COMMENT_SIMILARITY_THRESHOLD, # No longer used
         # Add other future configurations here
     }
     
@@ -287,7 +286,7 @@ def process_event_changes(api_events, seen_events_db):
         # Variables to keep track of the best match found so far for this deferred_id
         best_match_id = None
         best_match_datetime = None
-        best_match_score = 0 # Comment similarity score for the best_match_id
+        best_match_score = 0 # Now 1 for exact comment match, 0 otherwise
 
         for new_event_id in potential_reschedules_from_new:
             if new_event_id == deferred_id: continue # Cannot match to itself
@@ -304,29 +303,32 @@ def process_event_changes(api_events, seen_events_db):
             if (new_datetime - deferred_datetime).days > APP_CONFIG["deferred_match_grace_period_days"]: continue
             if new_event_data.get('EventBodyName') != deferred_event_data.get('EventBodyName'): continue
             
-            current_comment_sim = string_similarity(new_event_data.get('EventComment'), deferred_event_data.get('EventComment'))
+            # Exact match for comments
+            is_comment_exact_match = (new_event_data.get('EventComment') == deferred_event_data.get('EventComment'))
+            current_match_quality = 1 if is_comment_exact_match else 0 # 1 for exact, 0 otherwise
             
-            if current_comment_sim >= APP_CONFIG["deferred_match_comment_similarity_threshold"]:
-                # This new_event_id is a valid candidate
+            if is_comment_exact_match: # Only proceed if comments match exactly
                 if best_match_id is None: # First valid candidate found
                     best_match_id = new_event_id
                     best_match_datetime = new_datetime
-                    best_match_score = current_comment_sim
+                    best_match_score = current_match_quality # Will be 1
                 else:
                     # Compare with the current best_match
                     if new_datetime < best_match_datetime: # Prioritize earlier date
                         best_match_id = new_event_id
                         best_match_datetime = new_datetime
-                        best_match_score = current_comment_sim
-                    elif new_datetime == best_match_datetime: # If dates are same, prioritize higher comment similarity
-                        if current_comment_sim > best_match_score:
-                            best_match_id = new_event_id
-                            # best_match_datetime remains the same
-                            best_match_score = current_comment_sim
+                        best_match_score = current_match_quality # Will be 1
+                    elif new_datetime == best_match_datetime: # If dates are same, an exact comment match is already established
+                        # current_match_quality will be 1, best_match_score will also be 1.
+                        # The first one encountered with exact match on same earliest date wins.
+                        # No need for an explicit check against best_match_score here if we only enter on exact match.
+                        pass # Keep existing best_match_id if dates are equal, as comments are already exact for both.
         
         if best_match_id:
-            logger.info(f"Matched deferred Event ID {deferred_id} (date: {deferred_datetime}) to new Event ID {best_match_id} (date: {best_match_datetime}, score: {best_match_score:.2f}) as reschedule.")
-            new_event_entry_for_match = seen_events_db[best_match_id] # Renamed to avoid conflict
+            # Log score as 1 (exact) or 0 (should not happen if we only enter on exact match, but for safety)
+            log_score = 1 if (seen_events_db[best_match_id]["event_data"].get('EventComment') == deferred_event_data.get('EventComment')) else 0
+            logger.info(f"Matched deferred Event ID {deferred_id} (date: {deferred_datetime}) to new Event ID {best_match_id} (date: {best_match_datetime}, comment_match: {'exact' if log_score == 1 else 'error_in_logic'}) as reschedule.")
+            new_event_entry_for_match = seen_events_db[best_match_id]
 
             deferred_entry["current_status"] = 'deferred_rescheduled'
             deferred_entry["rescheduled_event_details_if_deferred"] = {
