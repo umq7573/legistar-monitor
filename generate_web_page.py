@@ -5,6 +5,7 @@ import logging
 from datetime import datetime
 import argparse
 import math
+from urllib.parse import parse_qs # For parsing query params if we were in a web server context
 
 # Configure logging
 logging.basicConfig(
@@ -199,16 +200,29 @@ def generate_pagination_html(current_page, total_pages, base_url="index.html"):
     html += "</ul></nav>"
     return html
 
-def generate_html_page_content(processed_data, page_title="NYC Legistar Hearing Monitor", current_page=1):
+def generate_html_page_content(processed_data, page_title="NYC Legistar Hearing Monitor", current_page=1, updates_filter_value="since_last_run"):
     """Generates the main HTML structure for the page."""
     
     generation_timestamp = processed_data.get("generation_timestamp", datetime.now().isoformat())
     generation_date_display = format_display_date(generation_timestamp)
 
-    # For now, default to "updates_since_last_run" for the Updates column
-    # Client-side filtering for dropdown can be added later.
-    updates_to_display = processed_data.get("updates_since_last_run", [])
-    
+    # Select which updates list to display based on the filter value
+    if updates_filter_value == "last_7_days":
+        updates_to_display = processed_data.get("updates_last_7_days", [])
+        selected_filter_option_7 = "selected"
+        selected_filter_option_30 = ""
+        selected_filter_option_last_run = ""
+    elif updates_filter_value == "last_30_days":
+        updates_to_display = processed_data.get("updates_last_30_days", [])
+        selected_filter_option_7 = ""
+        selected_filter_option_30 = "selected"
+        selected_filter_option_last_run = ""
+    else: # Default to "since_last_run"
+        updates_to_display = processed_data.get("updates_since_last_run", [])
+        selected_filter_option_7 = ""
+        selected_filter_option_30 = ""
+        selected_filter_option_last_run = "selected"
+
     upcoming_hearings_all = processed_data.get("upcoming_hearings", [])
     total_upcoming = len(upcoming_hearings_all)
     total_pages = math.ceil(total_upcoming / ITEMS_PER_PAGE)
@@ -228,11 +242,10 @@ def generate_html_page_content(processed_data, page_title="NYC Legistar Hearing 
     <style>
         body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding-top: 20px; }}
         .container-main {{ max-width: 1400px; }}
-        .updates-column {{ max-height: 90vh; overflow-y: auto; }}
+        .updates-column {{ max-height: 90vh; overflow-y: auto; position: sticky; top: 20px; }}
         .event-card {{ border-left-width: 5px; border-left-style: solid; }}
-        /* Specific card border colors can be added if desired, or use badges primarily */
         .card-title small {{ font-size: 0.8rem; color: #6c757d; }}
-        del {{ color: #dc3545; }} /* Strikethrough for deferred dates */
+        del {{ color: #dc3545; }}
     </style>
 </head>
 <body>
@@ -247,10 +260,10 @@ def generate_html_page_content(processed_data, page_title="NYC Legistar Hearing 
             <div class="col-md-4 updates-column">
                 <h4>Updates</h4>
                 <div class="mb-3">
-                    <select class="form-select" id="updates-filter" disabled> <!-- Dropdown disabled for now -->
-                        <option selected>Since last update</option>
-                        <option>Last 7 days</option>
-                        <option>Last 30 days</option>
+                    <select class="form-select" id="updates-filter">
+                        <option value="since_last_run" {selected_filter_option_last_run}>Since last update</option>
+                        <option value="last_7_days" {selected_filter_option_7}>Last 7 days</option>
+                        <option value="last_30_days" {selected_filter_option_30}>Last 30 days</option>
                     </select>
                 </div>
                 <div id="updates-content">
@@ -259,68 +272,61 @@ def generate_html_page_content(processed_data, page_title="NYC Legistar Hearing 
         for item in updates_to_display:
             html += generate_update_item_html(item)
     else:
-        html += '<p class="text-muted">No updates since last check.</p>'
+        html += '    <p class="text-muted">No updates for selected period.</p>'
     
     html += """
                 </div> <!-- /updates-content -->
             </div> <!-- /col-md-4 updates-column -->
 
-                        <!-- Upcoming Hearings Column (Right) -->
+            <!-- Upcoming Hearings Column (Right) -->
             <div class="col-md-8">
-                <h4>Upcoming Hearings ({total_upcoming} total)</h4>
+                <h4>Upcoming Hearings (""" + f"{total_upcoming} total" + """)</h4>
                 <div id="upcoming-hearings-content">
 """
     if upcoming_hearings_paginated:
         for event_entry in upcoming_hearings_paginated:
             html += generate_event_card(event_entry)
-    elif upcoming_hearings_all: # Paginated is empty but all is not (means invalid page number)
+    elif upcoming_hearings_all:
         html += '<p>No hearings on this page. Try a different page number.</p>'
     else:
         html += '<p class="text-muted">No upcoming hearings found.</p>'
-    
+
     html += """
                 </div> <!-- /upcoming-hearings-content -->
 """
-    # Pagination
-    html += generate_pagination_html(current_page, total_pages)
-
+    html += generate_pagination_html(current_page, total_pages, base_url=f"index.html?updates_filter={updates_filter_value}") # Pass filter to pagination links
+    
     html += """
             </div> <!-- /col-md-8 -->
         </div> <!-- /row -->
     </div> <!-- /container -->
 
     <script>
-        // Basic script to handle page parameter for pagination (server-side for now)
-        // More advanced JS could handle client-side filtering for updates if needed.
-        // document.getElementById('updates-filter').addEventListener('change', function() {
-        //     console.log('Filter changed to: ' + this.value);
-        //     // Add logic to reload/filter updates content here
-        // });
+        document.getElementById('updates-filter').addEventListener('change', function() {
+            var selectedFilter = this.value;
+            var currentPage = new URLSearchParams(window.location.search).get('page') || '1'; // Preserve current page for upcoming hearings
+            window.location.href = 'index.html?updates_filter=' + selectedFilter + '&page=' + currentPage;
+        });
     </script>
 </body>
 </html>
-"""
+    """
     return html
 
 def main():
     parser = argparse.ArgumentParser(description="Generate a static HTML page for Legistar hearings.")
     parser.add_argument("--title", default="NYC Legistar Hearing Monitor", help="Title for the HTML page.")
-    # Page argument for pagination - this assumes each page is a separate HTML file or handled by query param
-    # For GitHub Pages, if we want index.html?page=2, a serverless function or client-side routing is better.
-    # For simple static generation, we could generate multiple files like index.html, page2.html, etc.
-    # Or, more simply, just show the first page and rely on future JS for full pagination.
-    # For this iteration, we'll assume `index.html` shows page 1. A query param would be for future enhancement.
-    # Let's add a --page argument to simulate this, default to 1.
     parser.add_argument("--page", type=int, default=1, help="Page number for upcoming hearings pagination.")
-
-
+    parser.add_argument("--updates-filter", 
+                        choices=["since_last_run", "last_7_days", "last_30_days"],
+                        default="since_last_run", 
+                        help="Which set of updates to display by default.")
     args = parser.parse_args()
     
     logger.info("Starting webpage generation...")
 
     if not os.path.exists(PROCESSED_EVENTS_FILE):
         logger.error(f"Processed events file not found: {PROCESSED_EVENTS_FILE}")
-        # Create a basic error page
         error_html = f"<html><body><h1>Error</h1><p>Processed data file not found. Cannot generate page.</p><p>Last attempted update: {datetime.now().isoformat()}</p></body></html>"
         os.makedirs(WEB_DIR, exist_ok=True)
         with open(INDEX_HTML, 'w') as f:
@@ -340,7 +346,6 @@ def main():
         logger.info(f"Generated error page due to data load failure at {INDEX_HTML}")
         return
 
-    # Handle error state from check_new_hearings.py if present
     if "error" in processed_data:
         logger.warning(f"Data file indicates an error from previous step: {processed_data['error']}")
         error_html = f"<html><body><h1>Warning</h1><p>There was an issue fetching or processing hearing data: {processed_data['error']}</p><p>Timestamp: {processed_data.get('generation_timestamp', datetime.now().isoformat())}</p></body></html>"
@@ -350,13 +355,23 @@ def main():
         logger.info(f"Generated warning page at {INDEX_HTML} due to upstream error.")
         return
 
-    final_html = generate_html_page_content(processed_data, page_title=args.title, current_page=args.page)
+    final_html = generate_html_page_content(
+        processed_data, 
+        page_title=args.title, 
+        current_page=args.page,
+        updates_filter_value=args.updates_filter
+    )
     
+    # For a true query param driven site, the GitHub action would need to be smarter or run a small server.
+    # For now, the GH Action will always generate index.html with default filters.
+    # The JS allows users to change it, and the URL will reflect it for bookmarking/sharing if served appropriately.
+    # If different pages per filter are desired (e.g. index_last_7_days.html), main() would need to handle that.
+
     os.makedirs(WEB_DIR, exist_ok=True)
     with open(INDEX_HTML, 'w', encoding='utf-8') as f:
         f.write(final_html)
     
-    logger.info(f"Successfully generated webpage at {INDEX_HTML} (Page {args.page})")
+    logger.info(f"Successfully generated webpage at {INDEX_HTML} (Page {args.page}, Updates: {args.updates_filter})")
 
 if __name__ == "__main__":
     main() 
