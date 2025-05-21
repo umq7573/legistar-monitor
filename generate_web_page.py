@@ -54,8 +54,20 @@ def generate_event_card(event_entry, is_update_card=False):
     card_html = '<div class="card event-card mb-3">'
     card_html += '<div class="card-body">'
     
-    # Title
+    # Header section with committee name and agenda button side by side
+    card_html += '<div class="card-header-flex">'
     card_html += f'<h5 class="card-title">{event_data.get("EventBodyName", "N/A")}</h5>'
+    
+    # Agenda button (moved to header)
+    agenda_file = event_data.get("EventAgendaFile")
+    if agenda_file:
+        card_html += f'<a href="{agenda_file}" target="_blank" class="btn btn-sm btn-outline-primary agenda-btn">View Agenda</a>'
+    card_html += '</div>'
+    
+    # Subtitle (Synthetic Meeting Topic) - only if available
+    meeting_topic = event_data.get("SyntheticMeetingTopic")
+    if meeting_topic:
+        card_html += f'<h6 class="card-subtitle mb-2 text-muted">{meeting_topic}</h6>'
 
     # Tags for upcoming hearings
     if not is_update_card and tags:
@@ -67,16 +79,17 @@ def generate_event_card(event_entry, is_update_card=False):
             orig_date_disp = format_display_date(orig_details.get("original_date"), include_time=False)
             orig_time_disp = get_event_time_display(orig_details.get("original_time"))
             tag_html += f'<span class="badge bg-info me-1">RESCHEDULED (was {orig_date_disp} {orig_time_disp})</span>'
-        if "deferred_hearing_tag" in tags: # For deferred_pending_match or deferred_nomatch
+        if "deferred_hearing_tag" in tags:
             tag_html += '<span class="badge bg-warning me-1">DEFERRED</span>'
         if tag_html:
             card_html += f'<p class="card-text small">{tag_html}</p>'
 
-    # Date and Time
+    # Date, Time and Location in one responsive flex row
     event_date = event_data.get("EventDate")
     event_time = event_data.get("EventTime")
+    event_location = event_data.get("EventLocation", "TBD")
 
-    if event_entry.get("current_status") in ["deferred_pending_match", "deferred_nomatch"] :
+    if event_entry.get("current_status") in ["deferred_pending_match", "deferred_nomatch"]:
         original_date_display = format_display_date(event_date, include_time=False)
         original_time_display = get_event_time_display(event_time)
         card_html += f'<p class="card-text"><strong>Original Date:</strong> <del>{original_date_display}</del> {original_time_display}</p>'
@@ -87,24 +100,19 @@ def generate_event_card(event_entry, is_update_card=False):
     else: # Active events or the new part of a reschedule
         date_display = format_display_date(event_date, include_time=False)
         time_display = get_event_time_display(event_time)
-        card_html += f'<p class="card-text"><strong>Date:</strong> {date_display}</p>'
-        card_html += f'<p class="card-text"><strong>Time:</strong> {time_display}</p>'
-
-    # Location
-    card_html += f'<p class="card-text"><strong>Location:</strong> {event_data.get("EventLocation", "TBD")}</p>'
+        
+        # Use flexbox for date, time, location with automatic wrapping
+        card_html += '<div class="card-details-flex">'
+        card_html += f'<p class="detail-item"><strong>Date:</strong> {date_display}</p>'
+        card_html += f'<p class="detail-item"><strong>Time:</strong> {time_display}</p>'
+        card_html += f'<p class="detail-item"><strong>Location:</strong> {event_location}</p>'
+        card_html += '</div>'
     
     # Comment
     comment = event_data.get("EventComment")
     if comment:
         card_html += f'<p class="card-text fst-italic"><small>Comment: {comment}</small></p>'
-        
-    # Agenda Link
-    agenda_file = event_data.get("EventAgendaFile")
-    if agenda_file:
-        card_html += f'<p class="card-text"><a href="{agenda_file}" target="_blank" class="btn btn-sm btn-outline-primary">View Agenda</a></p>'
-    else:
-        card_html += '<p class="card-text"><small>Agenda not yet available</small></p>'
-        
+    
     card_html += "</div></div>"
     return card_html
 
@@ -117,22 +125,49 @@ def generate_update_item_html(update_item):
     html += '<div class="card-body">'
     
     body_name = event_data.get("EventBodyName", "N/A")
+    meeting_topic = event_data.get("SyntheticMeetingTopic")
+    
     original_event_details = entry.get("original_event_details_if_rescheduled")
     rescheduled_details_for_deferred = entry.get("rescheduled_event_details_if_deferred")
-
+    
+    agenda_file = event_data.get("EventAgendaFile")
+    
+    # Header section with committee name and agenda button
+    html += '<div class="card-header-flex">'
     if item_type == "new":
         html += f'<h5 class="card-title text-success">NEW: {body_name}</h5>'
+    elif item_type == "deferred":
+        html += f'<h5 class="card-title text-warning">DEFERRED: {body_name}</h5>'
+    else:
+        html += f'<h5 class="card-title text-muted">UPDATE ({item_type}): {body_name}</h5>'
+    
+    # Agenda button
+    if agenda_file:
+        html += f'<a href="{agenda_file}" target="_blank" class="btn btn-sm btn-outline-secondary agenda-btn">View Agenda</a>'
+    html += '</div>'
+    
+    # Meeting topic subtitle
+    if meeting_topic:
+        html += f'<h6 class="card-subtitle mb-2 text-muted">{meeting_topic}</h6>'
+    
+    if item_type == "new":
         current_event_date_disp = format_display_date(event_data.get("EventDate"), include_time=False)
         current_event_time_disp = get_event_time_display(event_data.get("EventTime"))
-        html += f'<p class="card-text"><strong>Date:</strong> {current_event_date_disp}</p>'
-        html += f'<p class="card-text"><strong>Time:</strong> {current_event_time_disp}</p>'
+        event_location = event_data.get("EventLocation", "TBD")
+        
+        # Use flexbox for details
+        html += '<div class="card-details-flex">'
+        html += f'<p class="detail-item"><strong>Date:</strong> {current_event_date_disp}</p>'
+        html += f'<p class="detail-item"><strong>Time:</strong> {current_event_time_disp}</p>'
+        html += f'<p class="detail-item"><strong>Location:</strong> {event_location}</p>'
+        html += '</div>'
+        
         if original_event_details: # This "new" event is a reschedule of a previous one
             orig_date_disp = format_display_date(original_event_details.get("original_date"), include_time=False)
             orig_time_disp = get_event_time_display(original_event_details.get("original_time"))
             html += f'<p class="card-text fst-italic"><small>(Rescheduled from {orig_date_disp} {orig_time_disp})</small></p>'
 
     elif item_type == "deferred":
-        html += f'<h5 class="card-title text-warning">DEFERRED: {body_name}</h5>'
         original_date_disp = format_display_date(event_data.get("EventDate"), include_time=False)
         original_time_disp = get_event_time_display(event_data.get("EventTime"))
         html += f'<p class="card-text">Original Date: <del>{original_date_disp} {original_time_disp}</del></p>'
@@ -141,32 +176,18 @@ def generate_update_item_html(update_item):
             new_date_disp = format_display_date(rescheduled_details_for_deferred.get("new_date"), include_time=False)
             new_time_disp = get_event_time_display(rescheduled_details_for_deferred.get("new_time"))
             html += f'<p class="card-text"><strong>Rescheduled to: {new_date_disp} {new_time_disp}</strong></p>'
-            # Link to the new event could be added if we pass enough info, or user just finds it in "Upcoming"
-            new_event_id = rescheduled_details_for_deferred.get("matched_event_id")
-            # ToDo: Potentially add a link or more explicit connection if the new event is active and in upcoming_hearings
-            # For now, the text indicates it and assumes the new event is in the main list if active.
         else: # Still deferred, awaiting reschedule or no match found after grace period
             html += '<p class="card-text"><em>Reschedule: Awaiting information</em></p>'
-            # We no longer make a distinction in the card for 'nomatch' vs 'pending_match' after grace period.
-            # The alert itself (deferred) persists based on its original deferral timestamp.
-            # If it ages out of the 7/30 day filter, it disappears. 
-
     else:
         # Fallback for any unexpected item_type, though this shouldn't happen with the new logic.
-        html += f'<h5 class="card-title text-muted">UPDATE ({item_type}): {body_name}</h5>'
         current_event_date_disp = format_display_date(event_data.get("EventDate"), include_time=False)
         current_event_time_disp = get_event_time_display(event_data.get("EventTime"))
         html += f'<p class="card-text">Date: {current_event_date_disp} {current_event_time_disp}</p>'
 
-    # Common details like location, agenda for all update types if relevant
-    location = event_data.get("EventLocation")
-    if location:
-        html += f'<p class="card-text"><small>Location: {location}</small></p>'
-    agenda_file = event_data.get("EventAgendaFile")
-    if agenda_file:
-        html += f'<p class="card-text"><a href="{agenda_file}" target="_blank" class="btn btn-sm btn-outline-secondary mt-1">View Agenda</a></p>'
-    else:
-        html += f'<p class="card-text"><small>Agenda not yet available</small></p>'
+    # Comment if exists
+    comment = event_data.get("EventComment")
+    if comment:
+        html += f'<p class="card-text fst-italic small">{comment}</p>'
         
     html += "</div></div>"
     return html
@@ -250,12 +271,43 @@ def generate_html_page_content(processed_data, page_title="NYC Legistar Hearing 
     <title>{page_title}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding-top: 20px; }}
-        .container-main {{ max-width: 1400px; }}
-        .updates-column {{ max-height: 90vh; overflow-y: auto; position: sticky; top: 20px; }}
-        .event-card {{ border-left-width: 5px; border-left-style: solid; }}
-        .card-title small {{ font-size: 0.8rem; color: #6c757d; }}
-        del {{ color: #dc3545; }}
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding-top: 20px; }
+        .container-main { max-width: 1400px; }
+        .updates-column { max-height: 90vh; overflow-y: auto; position: sticky; top: 20px; }
+        .event-card { border-left-width: 5px; border-left-style: solid; }
+        .card-title small { font-size: 0.8rem; color: #6c757d; }
+        del { color: #dc3545; }
+        
+        /* New styles for improved card layout */
+        .card-header-flex { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+        .card-header-flex .card-title { 
+            margin-bottom: 0; 
+            margin-right: 8px;
+            flex: 1;
+        }
+        .card-subtitle {
+            margin-top: 0.25rem !important;
+            margin-bottom: 0.75rem !important;
+        }
+        .card-details-flex {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+        .card-details-flex .detail-item {
+            margin: 0;
+            white-space: nowrap;
+        }
+        .agenda-btn {
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
     </style>
 </head>
 <body>
@@ -278,7 +330,7 @@ def generate_html_page_content(processed_data, page_title="NYC Legistar Hearing 
                 </div>
                 <div id="updates-content">
 """
-    if updates_to_display:
+        if updates_to_display:
         for item in updates_to_display:
             html += generate_update_item_html(item)
     else:
@@ -296,7 +348,7 @@ def generate_html_page_content(processed_data, page_title="NYC Legistar Hearing 
     if upcoming_hearings_paginated:
         for event_entry in upcoming_hearings_paginated:
             html += generate_event_card(event_entry)
-    elif upcoming_hearings_all: #
+    elif upcoming_hearings_all:
         html += '                    <p>No hearings on this page. Try a different page number.</p>'
     else:
         html += '                    <p class="text-muted">No upcoming hearings found.</p>'

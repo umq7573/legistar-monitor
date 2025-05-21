@@ -137,26 +137,74 @@ def save_seen_events(seen_events):
     except Exception as e:
         logger.error(f"Error saving history file: {e}")
 
+def extract_topic_from_items(event_items):
+    """Extracts a meeting topic from event items."""
+    if not event_items:
+        return None
+
+    # Sort items by agenda sequence (lowest first), None/null sequences last
+    event_items.sort(key=lambda x: x.get("EventItemAgendaSequence") if x.get("EventItemAgendaSequence") is not None else float('inf'))
+    
+    if not event_items: # Should not happen if original list was not empty, but as a safeguard
+        return None
+
+    primary_item = event_items[0]
+    
+    topic = primary_item.get("EventItemMatterName")
+    if topic and topic.strip():
+        return topic.strip()
+    
+    # Fallback to EventItemTitle if EventItemMatterName is not available or empty
+    topic = primary_item.get("EventItemTitle")
+    if topic and topic.strip():
+        # Clean up common boilerplate or excessive newlines if needed from title
+        topic_lines = [line.strip() for line in topic.strip().splitlines() if line.strip()]
+        # Heuristic: if the first line looks like a header (e.g. all caps) and there are other lines,
+        # prefer the first line. Otherwise, join a few lines. This is a simple heuristic.
+        if topic_lines:
+            if len(topic_lines) > 1 and topic_lines[0].isupper() and any(c.islower() for c in topic_lines[0]): # Mix of upper/lower suggests not a pure title
+                 return topic_lines[0] # Take first line if it's descriptive
+            return " ".join(topic_lines[:3]) # Join first few lines, or just the first if only one
+        return None # Should not happen if topic.strip() was true
+
+    return "Meeting details to be determined" # Final fallback
+
 def fetch_events_from_api(api):
-    """Fetch events from the Legistar API based on configured lookback."""
+    """Fetch events from the Legistar API based on configured lookback and augment with meeting topic."""
     today = datetime.now()
     start_date = (today - timedelta(days=APP_CONFIG['lookback_days']))
     
-    # End date is None for open-ended future query
     logger.info(f"Fetching events from {start_date.date()} to indefinite future.")
     
-    # The get_events method in LegistarAPI now handles pagination and takes page_size via 'top'
-    events = api.get_events(
-        top=1000,  # Page size for API calls, LegistarAPI handles full pagination
-        date_range=(start_date, None) # None as end_date for open-ended future
+    api_events = api.get_events(
+        top=1000,
+        date_range=(start_date, None)
     )
     
-    if not events:
+    if not api_events:
         logger.warning("No events found from API for the given date range.")
         return []
     
-    logger.info(f"Fetched {len(events)} total events from API.")
-    return events
+    logger.info(f"Fetched {len(api_events)} raw events from API. Now augmenting with meeting topics...")
+    
+    augmented_events = []
+    for event_obj in api_events:
+        event_id = event_obj.get("EventId")
+        if event_id:
+            try:
+                event_items = api.get_event_items(event_id)
+                topic = extract_topic_from_items(event_items)
+                event_obj["SyntheticMeetingTopic"] = topic
+                # logger.debug(f"EventID {event_id}, Topic: {topic}")
+            except Exception as e:
+                logger.error(f"Error fetching or processing event items for EventId {event_id}: {e}")
+                event_obj["SyntheticMeetingTopic"] = "Error retrieving topic"
+        else:
+            event_obj["SyntheticMeetingTopic"] = "Meeting Topic Not Available (No EventId)"
+        augmented_events.append(event_obj)
+        
+    logger.info(f"Augmented {len(augmented_events)} events with SyntheticMeetingTopic.")
+    return augmented_events
 
 def initialize_seen_event_entry(event_obj, current_time_iso):
     """Creates a new entry for seen_events.json based on the new data model."""
