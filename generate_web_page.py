@@ -110,44 +110,56 @@ def generate_event_card(event_entry, is_update_card=False):
 
 def generate_update_item_html(update_item):
     """Generates HTML for an item in the 'Updates' column."""
-    item_type = update_item.get("type")
+    item_type = update_item.get("type") # This will now be one of the last_alert_type values
     entry = update_item.get("data", {})
     event_data = entry.get("event_data", {})
     html = '<div class="card event-card mb-3">'
     html += '<div class="card-body">'
     
     body_name = event_data.get("EventBodyName", "N/A")
-    original_date_disp = format_display_date(event_data.get("EventDate"), include_time=False)
-    original_time_disp = get_event_time_display(event_data.get("EventTime"))
+    # Get current event date/time for display in some cards
+    current_event_date_disp = format_display_date(event_data.get("EventDate"), include_time=False)
+    current_event_time_disp = get_event_time_display(event_data.get("EventTime"))
 
     if item_type == "new":
         html += f'<h5 class="card-title text-success">NEW: {body_name}</h5>'
-        html += f'<p class="card-text"><strong>Date:</strong> {original_date_disp}</p>'
-        html += f'<p class="card-text"><strong>Time:</strong> {original_time_disp}</p>'
-    elif item_type == "deferred_pending":
+        html += f'<p class="card-text"><strong>Date:</strong> {current_event_date_disp}</p>'
+        html += f'<p class="card-text"><strong>Time:</strong> {current_event_time_disp}</p>'
+    elif item_type == "deferred_initial": # Was "deferred_pending"
         html += f'<h5 class="card-title text-warning">DEFERRED: {body_name}</h5>'
-        html += f'<p class="card-text">Original: {original_date_disp} {original_time_disp}</p>'
+        html += f'<p class="card-text">Original: {current_event_date_disp} {current_event_time_disp}</p>'
         html += '<p class="card-text"><em>Reschedule: Awaiting information</em></p>'
     elif item_type == "deferred_nomatch":
         html += f'<h5 class="card-title text-secondary">DEFERRED (No Match): {body_name}</h5>'
-        html += f'<p class="card-text">Original: {original_date_disp} {original_time_disp}</p>'
+        html += f'<p class="card-text">Original: {current_event_date_disp} {current_event_time_disp}</p>'
         html += '<p class="card-text"><em>Reschedule: None found after grace period</em></p>'
-    elif item_type == "rescheduled_original_deferred": # The original event that was deferred
+    elif item_type == "deferred_rescheduled": # Was "rescheduled_original_deferred"
         rescheduled_details = entry.get("rescheduled_event_details_if_deferred", {})
         new_date_disp = format_display_date(rescheduled_details.get("new_date"), include_time=False)
         new_time_disp = get_event_time_display(rescheduled_details.get("new_time"))
         html += f'<h5 class="card-title text-info">DEFERRED & RESCHEDULED: {body_name}</h5>'
-        html += f'<p class="card-text"><del>Original: {original_date_disp} {original_time_disp}</del></p>'
+        html += f'<p class="card-text"><del>Original: {current_event_date_disp} {current_event_time_disp}</del></p>'
         html += f'<p class="card-text"><strong>New Date: {new_date_disp} {new_time_disp}</strong> (See Upcoming Hearings)</p>'
-    elif item_type == "rescheduled_new": # The new event that is the reschedule
+    elif item_type == "rescheduled_as_new": # Was "rescheduled_new"
         original_details = entry.get("original_event_details_if_rescheduled", {})
         orig_def_date_disp = format_display_date(original_details.get("original_date"), include_time=False)
         orig_def_time_disp = get_event_time_display(original_details.get("original_time"))
         html += f'<h5 class="card-title text-primary">RESCHEDULED EVENT: {body_name}</h5>'
-        html += f'<p class="card-text"><strong>Date: {original_date_disp}</strong></p>'
-        html += f'<p class="card-text"><strong>Time: {original_time_disp}</strong></p>'
+        # For RESCHEDULED EVENT, display ITS OWN date/time as primary, then reference original
+        html += f'<p class="card-text"><strong>Date: {current_event_date_disp}</strong></p>'
+        html += f'<p class="card-text"><strong>Time: {current_event_time_disp}</strong></p>'
         html += f'<p class="card-text"><small>(Rescheduled from {orig_def_date_disp} {orig_def_time_disp})</small></p>'
-    
+    elif item_type == "data_changed_reverted_deferral":
+        html += f'<h5 class="card-title text-muted">UPDATE (Reverted Deferral): {body_name}</h5>'
+        html += f'<p class="card-text"><strong>Date:</strong> {current_event_date_disp}</p>'
+        html += f'<p class="card-text"><strong>Time:</strong> {current_event_time_disp}</p>'
+        html += f'<p class="card-text"><small>This event was previously deferred and has been updated. Current status is active.</small></p>'
+    else:
+        # Fallback for any other unknown type, or types we don't want a distinct card for.
+        html += f'<h5 class="card-title text-muted">UPDATE: {body_name}</h5>'
+        html += f'<p class="card-text">Date: {current_event_date_disp} {current_event_time_disp}</p>'
+        html += f'<p class="card-text"><small>Type: {item_type}</small></p>' # Display type for debugging if needed
+
     # Common details like location, agenda for all update types if relevant
     location = event_data.get("EventLocation")
     if location:
