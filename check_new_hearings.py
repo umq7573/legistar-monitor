@@ -274,7 +274,6 @@ def process_event_changes(api_events, seen_events_db):
             stored_entry["last_processed_timestamp"] = current_run_iso_time
 
     # Pass 2: Attempt to match newly_added_event_ids with deferred_pending_match events
-    # Filter to only truly new events (not just changed ones that were already known)
     potential_reschedules_from_new = [eid for eid in newly_added_event_ids if seen_events_db[eid]["first_seen_timestamp"] == current_run_iso_time]
     
     deferred_pending_ids = [eid for eid, entry in seen_events_db.items() if entry["current_status"] == 'deferred_pending_match']
@@ -285,51 +284,66 @@ def process_event_changes(api_events, seen_events_db):
         deferred_datetime = get_event_datetime(deferred_event_data)
         if not deferred_datetime: continue
 
-        best_match_score = 0
+        # Variables to keep track of the best match found so far for this deferred_id
         best_match_id = None
+        best_match_datetime = None
+        best_match_score = 0 # Comment similarity score for the best_match_id
 
         for new_event_id in potential_reschedules_from_new:
             if new_event_id == deferred_id: continue # Cannot match to itself
             
             new_event_entry = seen_events_db[new_event_id]
-            # Ensure it hasn't already been linked as a reschedule of something else
-            if new_event_entry["original_event_details_if_rescheduled"]: continue 
+            if new_event_entry["original_event_details_if_rescheduled"]: continue # Already linked
 
             new_event_data = new_event_entry["event_data"]
             new_datetime = get_event_datetime(new_event_data)
             if not new_datetime: continue
 
-            if new_datetime <= deferred_datetime: continue # Reschedule must be later
+            # Basic chronological and grace period checks
+            if new_datetime <= deferred_datetime: continue
             if (new_datetime - deferred_datetime).days > APP_CONFIG["deferred_match_grace_period_days"]: continue
             if new_event_data.get('EventBodyName') != deferred_event_data.get('EventBodyName'): continue
             
-            comment_sim = string_similarity(new_event_data.get('EventComment'), deferred_event_data.get('EventComment'))
-            if comment_sim >= APP_CONFIG["deferred_match_comment_similarity_threshold"]:
-                # Could add more scoring factors here, like time difference
-                if comment_sim > best_match_score: # Simple best match for now
-                    best_match_score = comment_sim
+            current_comment_sim = string_similarity(new_event_data.get('EventComment'), deferred_event_data.get('EventComment'))
+            
+            if current_comment_sim >= APP_CONFIG["deferred_match_comment_similarity_threshold"]:
+                # This new_event_id is a valid candidate
+                if best_match_id is None: # First valid candidate found
                     best_match_id = new_event_id
+                    best_match_datetime = new_datetime
+                    best_match_score = current_comment_sim
+                else:
+                    # Compare with the current best_match
+                    if new_datetime < best_match_datetime: # Prioritize earlier date
+                        best_match_id = new_event_id
+                        best_match_datetime = new_datetime
+                        best_match_score = current_comment_sim
+                    elif new_datetime == best_match_datetime: # If dates are same, prioritize higher comment similarity
+                        if current_comment_sim > best_match_score:
+                            best_match_id = new_event_id
+                            # best_match_datetime remains the same
+                            best_match_score = current_comment_sim
         
         if best_match_id:
-            logger.info(f"Matched deferred Event ID {deferred_id} to new Event ID {best_match_id} as reschedule.")
-            new_event_entry = seen_events_db[best_match_id]
+            logger.info(f"Matched deferred Event ID {deferred_id} (date: {deferred_datetime}) to new Event ID {best_match_id} (date: {best_match_datetime}, score: {best_match_score:.2f}) as reschedule.")
+            new_event_entry_for_match = seen_events_db[best_match_id] # Renamed to avoid conflict
 
             deferred_entry["current_status"] = 'deferred_rescheduled'
             deferred_entry["rescheduled_event_details_if_deferred"] = {
                 "new_event_id": best_match_id,
-                "new_date": new_event_entry["event_data"].get('EventDate'),
-                "new_time": new_event_entry["event_data"].get('EventTime')
+                "new_date": new_event_entry_for_match["event_data"].get('EventDate'),
+                "new_time": new_event_entry_for_match["event_data"].get('EventTime')
             }
             deferred_entry["last_significant_change_timestamp"] = current_run_iso_time
             deferred_entry["processing_tags"].append('matched_as_deferred_to_new')
 
-            new_event_entry["original_event_details_if_rescheduled"] = {
+            new_event_entry_for_match["original_event_details_if_rescheduled"] = {
                 "deferred_event_id": deferred_id,
                 "original_date": deferred_event_data.get('EventDate'),
                 "original_time": deferred_event_data.get('EventTime')
             }
-            new_event_entry["last_significant_change_timestamp"] = current_run_iso_time
-            new_event_entry["processing_tags"].append('matched_as_reschedule_of_deferred')
+            new_event_entry_for_match["last_significant_change_timestamp"] = current_run_iso_time
+            new_event_entry_for_match["processing_tags"].append('matched_as_reschedule_of_deferred')
             
             newly_rescheduled_pairs.append((deferred_id, best_match_id))
             # Remove from newly_added_event_ids if it was there, as it's now a 'reschedule' type of new
