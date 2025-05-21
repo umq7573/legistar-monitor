@@ -56,7 +56,7 @@ def load_app_config():
     logger.info(f"Application config: {APP_CONFIG}")
 
 def load_seen_events():
-    """Load previously seen events from history file, migrating old formats if necessary."""
+    """Load previously seen events from history file."""
     if not os.path.exists(HISTORY_FILE):
         logger.info(f"No history file found at {HISTORY_FILE}, starting fresh.")
         return {}
@@ -68,65 +68,12 @@ def load_seen_events():
         logger.error(f"Error loading or parsing history file {HISTORY_FILE}: {e}. Starting fresh.")
         return {}
 
-    migrated_data = {}
-    current_time_iso = datetime.now().isoformat()
-
-    for event_key, entry_value in raw_data.items():
-        # New format has 'event_data' and 'current_status' as top-level keys in entry_value.
-        if "event_data" not in entry_value or "current_status" not in entry_value:
-            logger.warning(f"Old format entry found for key '{event_key}', attempting migration.")
+    # Basic normalization: ensure all event ID keys are strings.
+    # Assumes the rest of the data structure is compatible if loaded successfully.
+    normalized_data = {str(k): v for k, v in raw_data.items()}
             
-            actual_event_id_str = str(entry_value.get("event_id", event_key))
-            
-            # Construct a mock API event object from old entry data
-            mock_event_api_obj = {
-                # EventId in API is int. Keys in our DB are strings.
-                "EventId": None, # Will be populated from actual_event_id_str
-                "EventBodyName": entry_value.get("body"),
-                "EventDate": entry_value.get("date"), # ISO string or None
-                "EventTime": entry_value.get("time"), # String like "10:00 AM" or None
-                "EventLocation": entry_value.get("location"),
-                "EventAgendaFile": entry_value.get("agenda_url"), # Old field name
-                "EventComment": entry_value.get("EventComment"), # Might not exist in very old format
-                "EventAgendaStatusName": None # Cannot reliably get this from old simple status
-            }
-            try:
-                mock_event_api_obj["EventId"] = int(actual_event_id_str)
-            except ValueError:
-                logger.error(f"Could not convert event_id '{actual_event_id_str}' to int for mock_event_api_obj. This event might not be processed correctly if API data is missing.")
-                # Keep it as None or handle as error, but EventId is crucial.
-                # For now, let it be None if conversion fails, new data from API should overwrite if event still exists.
-
-
-            mock_event_api_obj_cleaned = {k: v for k, v in mock_event_api_obj.items() if v is not None}
-            if mock_event_api_obj["EventId"] is None and "EventId" in mock_event_api_obj_cleaned:
-                 del mock_event_api_obj_cleaned["EventId"] # Don't include a None EventId
-
-            first_seen_timestamp = entry_value.get("first_seen", current_time_iso)
-            # Use last_updated for other timestamps, as it's the most recent info from old format
-            last_meaningful_update_timestamp = entry_value.get("last_updated", first_seen_timestamp)
-
-            new_migrated_entry = {
-                "event_data": mock_event_api_obj_cleaned,
-                "first_seen_timestamp": first_seen_timestamp,
-                "last_seen_timestamp": last_meaningful_update_timestamp, # When it was last seen/updated in old system
-                "last_processed_timestamp": current_time_iso, # Mark as processed now during migration
-                "last_significant_change_timestamp": last_meaningful_update_timestamp,
-                "current_status": "active", # Default for migrated entries, will be re-evaluated
-                "original_event_details_if_rescheduled": None,
-                "rescheduled_event_details_if_deferred": None,
-                "processing_tags": ['migrated_from_old_format'],
-                "last_alert_type": "new", # Initialize for migrated entries
-                "last_alert_timestamp": first_seen_timestamp # Initialize for migrated entries
-            }
-            migrated_data[actual_event_id_str] = new_migrated_entry
-            logger.info(f"Migrated old entry for Event ID {actual_event_id_str} to new format.")
-        else:
-            # It's already in the new format, ensure key is string.
-            migrated_data[str(event_key)] = entry_value 
-            
-    logger.info(f"Loaded {len(migrated_data)} events from history, with migration if needed.")
-    return migrated_data
+    logger.info(f"Loaded {len(normalized_data)} events from history.")
+    return normalized_data
 
 def save_seen_events(seen_events):
     """Save seen events to history file"""
@@ -449,21 +396,10 @@ def process_event_changes(api_events, seen_events_db, api):
             # Check if grace period for matching has expired.
             grace_period_days = APP_CONFIG.get('deferred_match_grace_period_days', DEFAULT_DEFERRED_MATCH_GRACE_PERIOD_DAYS)
             
-            # Safeguard: Ensure last_alert_timestamp exists and is valid before parsing
-            last_alert_ts_str = deferred_entry.get("last_alert_timestamp")
-            if not last_alert_ts_str:
-                logger.warning(f"EventId {deferred_event_id} (deferred) is missing 'last_alert_timestamp'. Cannot check grace period. Entry: {deferred_entry}")
-                # Optionally, you could decide to advance its status here if it's old and problematic,
-                # or simply skip as done below.
-                continue # Skip grace period check for this event if timestamp is missing
+            # Assuming last_alert_timestamp exists and is valid if an event reaches this stage
+            # under the "clean pipeline" philosophy.
+            deferred_timestamp_dt = datetime.fromisoformat(deferred_entry["last_alert_timestamp"].replace('Z', '+00:00'))
 
-            try:
-                deferred_timestamp_dt = datetime.fromisoformat(last_alert_ts_str.replace('Z', '+00:00'))
-            except ValueError:
-                logger.warning(f"EventId {deferred_event_id} (deferred) has an invalid 'last_alert_timestamp' format: {last_alert_ts_str}. Cannot check grace period.")
-                continue # Skip grace period check for this event if timestamp is invalid
-
-            # last_alert_timestamp for a deferred event is when it became deferred.
             if datetime.now() > deferred_timestamp_dt + timedelta(days=grace_period_days):
                 if deferred_entry["current_status"] == "deferred_pending_match": # Only transition if it's still pending
                     deferred_entry["current_status"] = "deferred_nomatch_internal"
