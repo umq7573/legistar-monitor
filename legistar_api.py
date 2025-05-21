@@ -157,18 +157,40 @@ class LegistarAPI:
             }
             
             # Build filter string if filters are provided
-            # This part is slightly modified to ensure correct quoting for strings
             if filters:
                 filter_parts = []
+                
+                # Special handling for 'filter_conditions' if it exists
+                additional_raw_filters = None
+                if 'filter_conditions' in filters:
+                    additional_raw_filters = filters['filter_conditions']
+                    if not isinstance(additional_raw_filters, list):
+                        print(f"Warning: filter_conditions was provided but is not a list: {additional_raw_filters}. Ignoring.")
+                        additional_raw_filters = None
+                
                 for key, value in filters.items():
+                    if key == 'filter_conditions': # Already handled, skip
+                        continue
+
                     if key == 'date_range':
-                        start_date, end_date = value
+                        start_date, end_date = value # value is a tuple (datetime_obj, datetime_obj_or_None)
                         start_date_str = start_date.strftime('%Y-%m-%d')
+                        
                         # For date_range, if end_date is None, it means open-ended future
                         if end_date:
-                            end_date_str = end_date.strftime('%Y-%m-%d')
-                            filter_parts.append(f"EventDate ge datetime'{start_date_str}' and EventDate lt datetime'{end_date_str}'")
-                        else: # Open-ended future
+                            # If start_date and end_date are the same, we want events ON that day.
+                            # So, EventDate >= start_date AND EventDate < (start_date + 1 day)
+                            if start_date.date() == end_date.date():
+                                end_date_exclusive_str = (end_date + timedelta(days=1)).strftime('%Y-%m-%d')
+                                filter_parts.append(f"EventDate ge datetime'{start_date_str}' and EventDate lt datetime'{end_date_exclusive_str}'")
+                            else:
+                                # If end_date is specified and different, use it for the upper bound (exclusive lt)
+                                end_date_str = end_date.strftime('%Y-%m-%d') # Or (end_date + timedelta(days=1)) if API expects exclusive upper for ranges too.
+                                                                         # Assuming API handles EventDate lt specific_end_date correctly for ranges.
+                                                                         # For safety and consistency with single day, let's make end_date for lt exclusive.
+                                end_date_exclusive_str = (end_date + timedelta(days=1)).strftime('%Y-%m-%d')
+                                filter_parts.append(f"EventDate ge datetime'{start_date_str}' and EventDate lt datetime'{end_date_exclusive_str}'")
+                        else: # Open-ended future (end_date is None)
                             filter_parts.append(f"EventDate ge datetime'{start_date_str}'")
                     elif key.startswith('date_'): # e.g. date_EventDate_from, date_EventDate_to
                         field_parts = key.split('_') # ['date', 'EventDate', 'from']
@@ -192,7 +214,12 @@ class LegistarAPI:
                         elif isinstance(value, (int, float, bool)):
                              filter_parts.append(f"{key} {operator} {value}")
                         else: # Fallback for other types, may or may not work depending on OData spec
+                            print(f"Warning: Unhandled filter type for key {key}, value {value}. Attempting to use as is.")
                             filter_parts.append(f"{key} {operator} {value}")
+
+                # Add pre-formed filter conditions if they were provided
+                if additional_raw_filters:
+                    filter_parts.extend(additional_raw_filters)
 
                 if filter_parts:
                     params['$filter'] = ' and '.join(filter_parts)

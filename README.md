@@ -91,19 +91,19 @@ To test the hearing monitor and website generation locally:
     *   This file is listed in `.gitignore` and should not be committed.
 
 2.  **Run the scripts**:
-    ```bash
+```bash
     # Ensure dependencies are installed (e.g., requests)
     # pip install requests
 
     # Run the hearing monitor to check for changes and update local data files
-    python check_new_hearings.py
+python check_new_hearings.py
 
-    # Generate the static website
-    python generate_web_page.py
+# Generate the static website
+python generate_web_page.py
 
-    # Open the generated website in your browser
-    open docs/index.html
-    ```
+# Open the generated website in your browser
+open docs/index.html
+```
     *   When running locally, `check_new_hearings.py` will read `data/seen_events.json` if it exists in your local `data/` directory, or create it if not. This mimics one part of the Action's state management but without fetching from `gh-pages`.
 
 ### Manual Commands for `legistar_api.py`
@@ -149,15 +149,15 @@ The `legistar_api.py` script can also be used as a general command-line tool to 
 
 2.  **Run the command-line utility**:
     ```bash
-    ./legistar_api.py [command] [options]
-    ```
+   ./legistar_api.py [command] [options]
+   ```
 
 ## Available Commands (`legistar_api.py`)
 
 -   **`matters`**: Get legislation items
     ```bash
-    ./legistar_api.py matters --top 10 --status 35
-    ```
+  ./legistar_api.py matters --top 10 --status 35
+  ```
 
 - **`matter`**: Get details for a specific matter
   ```
