@@ -102,8 +102,6 @@ python generate_web_page.py
 open docs/index.html
 ```
 
-## Original Features
-
 ## Files in this Repository
 
 - **`LEGISTAR_API_DOCUMENTATION.md`**: Comprehensive documentation of the Legistar API, including available endpoints, field descriptions, and example usage patterns.
@@ -114,9 +112,9 @@ open docs/index.html
 
 - **`generate_web_page.py`**: Script that generates the static website for viewing changes.
 
-- **`config.json`**: Configuration file for the API client. You should add your client identifier and token here.
+- **`config.json`**: Configuration file for the API client. You should add your client identifier and token here. This file is intended for local development only. The automated GitHub Actions workflow uses repository secrets for API authentication.
 
-- **`archive/`**: Contains exploratory scripts and older features no longer in active use.
+- **`archive/`**: Contains older exploratory scripts and sample JSON outputs from previous API calls, which are not part of the active monitoring system.
 
 ## Getting Started
 
@@ -215,4 +213,6 @@ for matter in matters:
 
 ## Data Directory
 
-The `data/` directory contains JSON output from API calls. This data can be used for further analysis or as input to other applications. 
+The `data/` directory is used by the hearing monitor to store `seen_events.json` (a record of all events processed), `categorized_events.json` (events categorized by change type for the latest run), and `changes_summary.json` (a summary of the latest changes). This data can be used for further analysis or as input to other applications. 
+
+The `archive/` directory contains older exploratory scripts and sample JSON outputs from previous API calls, which are not part of the active monitoring system.
