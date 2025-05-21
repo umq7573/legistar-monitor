@@ -159,7 +159,7 @@ def generate_update_item_html(update_item):
     html += "</div></div>"
     return html
 
-def generate_pagination_html(current_page, total_pages, base_url="index.html"):
+def generate_pagination_html(current_page, total_pages):
     if total_pages <= 1:
         return ""
 
@@ -167,33 +167,31 @@ def generate_pagination_html(current_page, total_pages, base_url="index.html"):
     
     # Previous button
     if current_page > 1:
-        html += f'<li class="page-item"><a class="page-link" href="{base_url}?page={current_page - 1}">Previous</a></li>'
+        html += f'<li class="page-item"><a class="page-link" href="index.html?page={current_page - 1}">Previous</a></li>'
     else:
         html += '<li class="page-item disabled"><span class="page-link">Previous</span></li>'
         
     # Page numbers (simplified: show current, +/- a few, first, last)
-    # For a more complex pagination, you'd calculate ranges
-    # This is a basic version
     start_page = max(1, current_page - 2)
     end_page = min(total_pages, current_page + 2)
 
     if start_page > 1:
-        html += f'<li class="page-item"><a class="page-link" href="{base_url}?page=1">1</a></li>'
+        html += f'<li class="page-item"><a class="page-link" href="index.html?page=1">1</a></li>'
         if start_page > 2:
              html += '<li class="page-item disabled"><span class="page-link">...</span></li>'
     
     for i in range(start_page, end_page + 1):
         active_class = "active" if i == current_page else ""
-        html += f'<li class="page-item {active_class}"><a class="page-link" href="{base_url}?page={i}">{i}</a></li>'
+        html += f'<li class="page-item {active_class}"><a class="page-link" href="index.html?page={i}">{i}</a></li>'
         
     if end_page < total_pages:
         if end_page < total_pages - 1:
             html += '<li class="page-item disabled"><span class="page-link">...</span></li>'
-        html += f'<li class="page-item"><a class="page-link" href="{base_url}?page={total_pages}">{total_pages}</a></li>'
+        html += f'<li class="page-item"><a class="page-link" href="index.html?page={total_pages}">{total_pages}</a></li>'
 
     # Next button
     if current_page < total_pages:
-        html += f'<li class="page-item"><a class="page-link" href="{base_url}?page={current_page + 1}">Next</a></li>'
+        html += f'<li class="page-item"><a class="page-link" href="index.html?page={current_page + 1}">Next</a></li>'
     else:
         html += '<li class="page-item disabled"><span class="page-link">Next</span></li>'
         
@@ -294,7 +292,7 @@ def generate_html_page_content(processed_data, page_title="NYC Legistar Hearing 
     html += """
                 </div> <!-- /upcoming-hearings-content -->
 """
-    html += generate_pagination_html(current_page, total_pages, base_url=f"index.html?updates_filter={updates_filter_value}") # Pass filter to pagination links
+    html += generate_pagination_html(current_page, total_pages) # Simpler call, JS will add filter
     
     html += """
             </div> <!-- /col-md-8 -->
@@ -302,10 +300,39 @@ def generate_html_page_content(processed_data, page_title="NYC Legistar Hearing 
     </div> <!-- /container -->
 
     <script>
-        document.getElementById('updates-filter').addEventListener('change', function() {
-            var selectedFilter = this.value;
-            var currentPage = new URLSearchParams(window.location.search).get('page') || '1'; // Preserve current page for upcoming hearings
-            window.location.href = 'index.html?updates_filter=' + selectedFilter + '&page=' + currentPage;
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterSelect = document.getElementById('updates-filter');
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentFilter = urlParams.get('updates_filter');
+            const currentPage = urlParams.get('page') || '1';
+
+            if (currentFilter) {
+                filterSelect.value = currentFilter;
+            }
+
+            filterSelect.addEventListener('change', function() {
+                var selectedFilter = this.value;
+                // Preserve current page for upcoming hearings, or default to 1 if not set
+                var pageForUpcoming = new URLSearchParams(window.location.search).get('page') || '1';
+                window.location.href = 'index.html?updates_filter=' + selectedFilter + '&page=' + pageForUpcoming;
+            });
+
+            // Update pagination links to include the current updates_filter
+            const paginationLinks = document.querySelectorAll('.pagination .page-link');
+            paginationLinks.forEach(link => {
+                const href = link.getAttribute('href');
+                if (href && href.includes('?page=')) { // Links with page numbers
+                    if (currentFilter) {
+                        link.setAttribute('href', href + '&updates_filter=' + currentFilter);
+                    }
+                } else if (href && href.includes('index.html')) { // Previous/Next without explicit page if it's page 1 link
+                     if (currentFilter) {
+                        // This case might need refinement if pagination generates links like "index.html" for page 1.
+                        // Assuming pagination links are always in the form "?page=X" or have page embedded.
+                        // The current pagination generator seems to always include ?page=X.
+                     }
+                }
+            });
         });
     </script>
 </body>

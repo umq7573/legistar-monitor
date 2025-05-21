@@ -399,11 +399,11 @@ def generate_output_for_webpage(seen_events_db, newly_added_ids_this_run, newly_
     upcoming_hearings_list = []
     for entry_id, entry in seen_events_db.items():
         status = entry['current_status']
-        is_active = status == 'active'
-        # An event is "upcoming" if it's active, OR if it's the NEW part of a reschedule
-        is_new_part_of_reschedule = status == 'deferred_rescheduled' and entry.get('original_event_details_if_rescheduled') is not None
-        
-        if is_active or is_new_part_of_reschedule:
+        # An event is "upcoming" if it's 'active'.
+        # If it's an active event that IS a reschedule of something else, 
+        # it will have 'original_event_details_if_rescheduled' which the card generator uses.
+        # The 'deferred_rescheduled' status is for the *original* event that got rescheduled.
+        if status == 'active':
             event_dt_obj = get_event_datetime(entry['event_data'])
             if event_dt_obj and event_dt_obj.date() >= today_date:
                 upcoming_hearings_list.append(entry)
