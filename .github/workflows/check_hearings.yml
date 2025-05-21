@@ -12,12 +12,23 @@ jobs:
   check-hearings:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: write # Needed for pushing to gh-pages
     
     steps:
-      - name: Checkout code
+      - name: Checkout code from main branch
         uses: actions/checkout@v3
-        
+        # This checks out the code (python scripts, etc.) from the branch that triggered the workflow
+
+      - name: Initialize data directory and attempt to restore seen_events.json from gh-pages
+        run: |
+          mkdir -p data
+          # Try to fetch the gh-pages branch. If it doesn't exist, this will fail gracefully.
+          git fetch origin gh-pages:gh-pages || echo "No gh-pages branch found or other fetch error. Will proceed without prior seen_events.json."
+          # Try to checkout seen_events.json from the fetched gh-pages branch into the data directory.
+          # If the branch or file doesn't exist on gh-pages, this command will fail, and seen_events.json will not be present in data/.
+          # The check_new_hearings.py script is expected to handle the absence of this file by creating a new one.
+          git checkout gh-pages -- data/seen_events.json || echo "data/seen_events.json not found on gh-pages branch, or gh-pages branch not available. A new one will be created if needed."
+          
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -37,11 +48,11 @@ jobs:
           }' > config.json
       
       - name: Check for new hearings
-        id: check
+        id: check # check_new_hearings.py reads/writes data/seen_events.json and writes data/processed_events_for_web.json
         run: python check_new_hearings.py
       
       - name: Generate web page
-        run: python generate_web_page.py --title "NYC Legistar Hearing Monitor"
+        run: python generate_web_page.py --title "NYC Legistar Hearing Monitor" # reads data/processed_events_for_web.json, writes docs/index.html
       
       - name: Summarize results
         run: |
@@ -51,20 +62,14 @@ jobs:
           echo "Newly Deferred Events (pending match): ${{ steps.check.outputs.newly_deferred_count || 0 }}"
           echo "Newly Rescheduled (Deferred matched to New): ${{ steps.check.outputs.newly_rescheduled_count || 0 }}"
       
-      - name: Commit changes and push
+      # The "Commit changes and push" step that committed to main has been removed.
+      
+      - name: Stage data files for gh-pages deployment
         run: |
-          git config --global user.name "GitHub Actions Bot"
-          git config --global user.email "actions@github.com"
-          
-          # Add the seen events file and web page
-          git add data/seen_events.json
-          git add data/processed_events_for_web.json
-          git add docs/
-          
-          # Commit changes
-          git commit -m "Update seen events and web page [skip ci]" || echo "No changes to commit"
-          git push
-        
+          mkdir -p docs/data # Ensure target directory exists within docs
+          cp data/seen_events.json docs/data/seen_events.json
+          cp data/processed_events_for_web.json docs/data/processed_events_for_web.json # For debugging or if needed by a more complex page
+
       - name: Create .nojekyll file
         run: |
           touch docs/.nojekyll
@@ -72,6 +77,6 @@ jobs:
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@4.1.4
         with:
-          branch: gh-pages
-          folder: docs
-          clean: true 
+          branch: gh-pages # Target branch
+          folder: docs     # Source folder from the runner (will contain index.html, .nojekyll, and docs/data/*)
+          clean: true      # Clean the gh-pages branch before deploying 
