@@ -109,56 +109,54 @@ def generate_event_card(event_entry, is_update_card=False):
     return card_html
 
 def generate_update_item_html(update_item):
-    """Generates HTML for an item in the 'Updates' column."""
-    item_type = update_item.get("type") # This will now be one of the last_alert_type values
+    """Generates HTML for an item in the 'Updates' column based on simplified alert types."""
+    item_type = update_item.get("type") # This will be "new" or "deferred"
     entry = update_item.get("data", {})
     event_data = entry.get("event_data", {})
     html = '<div class="card event-card mb-3">'
     html += '<div class="card-body">'
     
     body_name = event_data.get("EventBodyName", "N/A")
-    # Get current event date/time for display in some cards
-    current_event_date_disp = format_display_date(event_data.get("EventDate"), include_time=False)
-    current_event_time_disp = get_event_time_display(event_data.get("EventTime"))
+    original_event_details = entry.get("original_event_details_if_rescheduled")
+    rescheduled_details_for_deferred = entry.get("rescheduled_event_details_if_deferred")
 
     if item_type == "new":
         html += f'<h5 class="card-title text-success">NEW: {body_name}</h5>'
+        current_event_date_disp = format_display_date(event_data.get("EventDate"), include_time=False)
+        current_event_time_disp = get_event_time_display(event_data.get("EventTime"))
         html += f'<p class="card-text"><strong>Date:</strong> {current_event_date_disp}</p>'
         html += f'<p class="card-text"><strong>Time:</strong> {current_event_time_disp}</p>'
-    elif item_type == "deferred_initial": # Was "deferred_pending"
+        if original_event_details: # This "new" event is a reschedule of a previous one
+            orig_date_disp = format_display_date(original_event_details.get("original_date"), include_time=False)
+            orig_time_disp = get_event_time_display(original_event_details.get("original_time"))
+            html += f'<p class="card-text fst-italic"><small>(Rescheduled from {orig_date_disp} {orig_time_disp})</small></p>'
+
+    elif item_type == "deferred":
         html += f'<h5 class="card-title text-warning">DEFERRED: {body_name}</h5>'
-        html += f'<p class="card-text">Original: {current_event_date_disp} {current_event_time_disp}</p>'
-        html += '<p class="card-text"><em>Reschedule: Awaiting information</em></p>'
-    elif item_type == "deferred_nomatch":
-        html += f'<h5 class="card-title text-secondary">DEFERRED (No Match): {body_name}</h5>'
-        html += f'<p class="card-text">Original: {current_event_date_disp} {current_event_time_disp}</p>'
-        html += '<p class="card-text"><em>Reschedule: None found after grace period</em></p>'
-    elif item_type == "deferred_rescheduled": # Was "rescheduled_original_deferred"
-        rescheduled_details = entry.get("rescheduled_event_details_if_deferred", {})
-        new_date_disp = format_display_date(rescheduled_details.get("new_date"), include_time=False)
-        new_time_disp = get_event_time_display(rescheduled_details.get("new_time"))
-        html += f'<h5 class="card-title text-info">DEFERRED & RESCHEDULED: {body_name}</h5>'
-        html += f'<p class="card-text"><del>Original: {current_event_date_disp} {current_event_time_disp}</del></p>'
-        html += f'<p class="card-text"><strong>New Date: {new_date_disp} {new_time_disp}</strong> (See Upcoming Hearings)</p>'
-    elif item_type == "rescheduled_as_new": # Was "rescheduled_new"
-        original_details = entry.get("original_event_details_if_rescheduled", {})
-        orig_def_date_disp = format_display_date(original_details.get("original_date"), include_time=False)
-        orig_def_time_disp = get_event_time_display(original_details.get("original_time"))
-        html += f'<h5 class="card-title text-primary">RESCHEDULED EVENT: {body_name}</h5>'
-        # For RESCHEDULED EVENT, display ITS OWN date/time as primary, then reference original
-        html += f'<p class="card-text"><strong>Date: {current_event_date_disp}</strong></p>'
-        html += f'<p class="card-text"><strong>Time: {current_event_time_disp}</strong></p>'
-        html += f'<p class="card-text"><small>(Rescheduled from {orig_def_date_disp} {orig_def_time_disp})</small></p>'
-    elif item_type == "data_changed_reverted_deferral":
-        html += f'<h5 class="card-title text-muted">UPDATE (Reverted Deferral): {body_name}</h5>'
-        html += f'<p class="card-text"><strong>Date:</strong> {current_event_date_disp}</p>'
-        html += f'<p class="card-text"><strong>Time:</strong> {current_event_time_disp}</p>'
-        html += f'<p class="card-text"><small>This event was previously deferred and has been updated. Current status is active.</small></p>'
+        original_date_disp = format_display_date(event_data.get("EventDate"), include_time=False)
+        original_time_disp = get_event_time_display(event_data.get("EventTime"))
+        html += f'<p class="card-text">Original Date: <del>{original_date_disp} {original_time_disp}</del></p>'
+
+        if rescheduled_details_for_deferred: # This deferred event has been rescheduled
+            new_date_disp = format_display_date(rescheduled_details_for_deferred.get("new_date"), include_time=False)
+            new_time_disp = get_event_time_display(rescheduled_details_for_deferred.get("new_time"))
+            html += f'<p class="card-text"><strong>Rescheduled to: {new_date_disp} {new_time_disp}</strong></p>'
+            # Link to the new event could be added if we pass enough info, or user just finds it in "Upcoming"
+            new_event_id = rescheduled_details_for_deferred.get("matched_event_id")
+            # ToDo: Potentially add a link or more explicit connection if the new event is active and in upcoming_hearings
+            # For now, the text indicates it and assumes the new event is in the main list if active.
+        else: # Still deferred, awaiting reschedule or no match found after grace period
+            html += '<p class="card-text"><em>Reschedule: Awaiting information</em></p>'
+            # We no longer make a distinction in the card for 'nomatch' vs 'pending_match' after grace period.
+            # The alert itself (deferred) persists based on its original deferral timestamp.
+            # If it ages out of the 7/30 day filter, it disappears. 
+
     else:
-        # Fallback for any other unknown type, or types we don't want a distinct card for.
-        html += f'<h5 class="card-title text-muted">UPDATE: {body_name}</h5>'
+        # Fallback for any unexpected item_type, though this shouldn't happen with the new logic.
+        html += f'<h5 class="card-title text-muted">UPDATE ({item_type}): {body_name}</h5>'
+        current_event_date_disp = format_display_date(event_data.get("EventDate"), include_time=False)
+        current_event_time_disp = get_event_time_display(event_data.get("EventTime"))
         html += f'<p class="card-text">Date: {current_event_date_disp} {current_event_time_disp}</p>'
-        html += f'<p class="card-text"><small>Type: {item_type}</small></p>' # Display type for debugging if needed
 
     # Common details like location, agenda for all update types if relevant
     location = event_data.get("EventLocation")
@@ -167,6 +165,8 @@ def generate_update_item_html(update_item):
     agenda_file = event_data.get("EventAgendaFile")
     if agenda_file:
         html += f'<p class="card-text"><a href="{agenda_file}" target="_blank" class="btn btn-sm btn-outline-secondary mt-1">View Agenda</a></p>'
+    else:
+        html += f'<p class="card-text"><small>Agenda not yet available</small></p>'
         
     html += "</div></div>"
     return html
@@ -282,8 +282,8 @@ def generate_html_page_content(processed_data, page_title="NYC Legistar Hearing 
         for item in updates_to_display:
             html += generate_update_item_html(item)
     else:
-        html += '    <p class="text-muted">No updates for selected period.</p>'
-    
+        html += '                    <p class="text-muted">No updates for selected period.</p>'
+
     html += """
                 </div> <!-- /updates-content -->
             </div> <!-- /col-md-4 updates-column -->
@@ -296,16 +296,16 @@ def generate_html_page_content(processed_data, page_title="NYC Legistar Hearing 
     if upcoming_hearings_paginated:
         for event_entry in upcoming_hearings_paginated:
             html += generate_event_card(event_entry)
-    elif upcoming_hearings_all:
-        html += '<p>No hearings on this page. Try a different page number.</p>'
+    elif upcoming_hearings_all: #
+        html += '                    <p>No hearings on this page. Try a different page number.</p>'
     else:
-        html += '<p class="text-muted">No upcoming hearings found.</p>'
+        html += '                    <p class="text-muted">No upcoming hearings found.</p>'
 
     html += """
                 </div> <!-- /upcoming-hearings-content -->
 """
     html += generate_pagination_html(current_page, total_pages) # Simpler call, JS will add filter
-    
+
     html += """
             </div> <!-- /col-md-8 -->
         </div> <!-- /row -->
@@ -314,42 +314,52 @@ def generate_html_page_content(processed_data, page_title="NYC Legistar Hearing 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const filterSelect = document.getElementById('updates-filter');
+            const paginationLinks = document.querySelectorAll('.pagination .page-link');
+            
+            // Set filter dropdown from URL query parameter on page load
             const urlParams = new URLSearchParams(window.location.search);
             const currentFilter = urlParams.get('updates_filter');
-            const currentPage = urlParams.get('page') || '1';
-
             if (currentFilter) {
                 filterSelect.value = currentFilter;
             }
 
             filterSelect.addEventListener('change', function() {
-                var selectedFilter = this.value;
-                // Preserve current page for upcoming hearings, or default to 1 if not set
-                var pageForUpcoming = new URLSearchParams(window.location.search).get('page') || '1';
-                window.location.href = 'index.html?updates_filter=' + selectedFilter + '&page=' + pageForUpcoming;
+                const selectedValue = this.value;
+                // Reload the page with the new filter query parameter, keeping other params like 'page' if they exist
+                urlParams.set('updates_filter', selectedValue);
+                // When changing filter, reset to page 1 of updates
+                urlParams.delete('page'); 
+                window.location.search = urlParams.toString();
             });
 
-            // Update pagination links to include the current updates_filter
-            const paginationLinks = document.querySelectorAll('.pagination .page-link');
+            // Ensure pagination links carry the current filter
             paginationLinks.forEach(link => {
-                const href = link.getAttribute('href');
-                if (href && href.includes('?page=')) { // Links with page numbers
-                    if (currentFilter) {
-                        link.setAttribute('href', href + '&updates_filter=' + currentFilter);
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const pageUrl = new URL(link.href);
+                    const pageNumber = pageUrl.searchParams.get('page');
+                    
+                    const currentUrlParams = new URLSearchParams(window.location.search);
+                    if (pageNumber) {
+                        currentUrlParams.set('page', pageNumber);
+                    } else {
+                         // Link might not have a page number if it's a non-functional link (e.g. '...')
+                        currentUrlParams.delete('page'); // Or handle as appropriate
                     }
-                } else if (href && href.includes('index.html')) { // Previous/Next without explicit page if it's page 1 link
-                     if (currentFilter) {
-                        // This case might need refinement if pagination generates links like "index.html" for page 1.
-                        // Assuming pagination links are always in the form "?page=X" or have page embedded.
-                        // The current pagination generator seems to always include ?page=X.
-                     }
-                }
+                    // Keep the existing filter if present
+                    const filterValue = filterSelect.value;
+                     if (filterValue) {
+                        currentUrlParams.set('updates_filter', filterValue);
+                    }
+
+                    window.location.search = currentUrlParams.toString();
+                });
             });
         });
     </script>
 </body>
 </html>
-    """
+"""
     return html
 
 def main():

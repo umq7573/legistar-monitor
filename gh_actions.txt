@@ -1,0 +1,183 @@
+# GitHub Actions: Command-Line Management Guide
+
+This guide provides concise instructions for managing GitHub Actions workflows using the GitHub CLI (`gh`).
+
+---
+
+1. Installation & Authentication
+
+---
+
+* Install GitHub CLI: [https://cli.github.com/](https://cli.github.com/)
+* Authenticate:
+
+  ```
+  gh auth login
+  ```
+
+---
+
+2. List Workflow Runs
+
+---
+
+* List recent runs:
+
+  ```
+  gh run list
+  ```
+* Filter by workflow file:
+
+  ```
+  gh run list --workflow <workflow_file.yml>
+  ```
+* Filter by branch or status:
+
+  ```
+  gh run list --branch <branch> --status <status>
+  ```
+
+---
+
+3. Trigger a Workflow
+
+---
+
+* Trigger a workflow with workflow\_dispatch:
+
+  ```
+  gh workflow run <workflow_file.yml>
+  ```
+* Specify a branch/tag:
+
+  ```
+  gh workflow run <workflow_file.yml> --ref <branch_or_tag>
+  ```
+* Pass input parameters:
+
+  ```
+  gh workflow run <workflow_file.yml> -f key=value
+  ```
+
+---
+
+4. View Run Details & Logs
+
+---
+
+* View details:
+
+  ```
+  gh run view <run_id>
+  ```
+* View logs:
+
+  ```
+  gh run view <run_id> --log
+  ```
+* Open in browser:
+
+  ```
+  gh run view <run_id> --web
+  ```
+
+---
+
+5. Rerun Workflows
+
+---
+
+* Rerun entire workflow:
+
+  ```
+  gh run rerun <run_id>
+  ```
+* Rerun only failed jobs:
+
+  ```
+  gh run rerun <run_id> --failed
+  ```
+
+---
+
+6. Cancel Workflow Runs
+
+---
+
+* Cancel a run:
+
+  ```
+  gh run cancel <run_id>
+  ```
+
+---
+
+7. Monitor Workflow Progress
+
+---
+
+* Watch until completion:
+
+  ```
+  gh run watch <run_id>
+  ```
+* Exit with status:
+
+  ```
+  gh run watch <run_id> --exit-status
+  ```
+
+---
+
+8. Download Artifacts
+
+---
+
+* Download artifacts:
+
+  ```
+  gh run download <run_id>
+  ```
+* Specify download directory:
+
+  ```
+  gh run download <run_id> --dir <path>
+  ```
+
+---
+
+9. View Workflow Definition
+
+---
+
+* View workflow details:
+
+  ```
+  gh workflow view <workflow_file.yml>
+  ```
+* View YAML:
+
+  ```
+  gh workflow view <workflow_file.yml> --yaml
+  ```
+
+---
+
+10. Delete Workflow Runs
+
+---
+
+* Delete a run:
+
+  ```
+  gh run delete <run_id>
+  ```
+* Delete multiple runs:
+
+  ```
+  gh run list --workflow <workflow_file.yml> --json databaseId -q '.[].databaseId' | xargs -n1 gh run delete
+  ```
+
+---
+
+Replace placeholders such as \<run\_id>, \<workflow\_file.yml>, <branch>, and <path> with actual values. Use `--help` with any `gh` command for additional options.

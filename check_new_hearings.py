@@ -165,13 +165,13 @@ def initialize_seen_event_entry(event_obj, current_time_iso):
         "first_seen_timestamp": current_time_iso,
         "last_seen_timestamp": current_time_iso,
         "last_processed_timestamp": current_time_iso,
-        "last_significant_change_timestamp": current_time_iso,
+        "last_significant_change_timestamp": current_time_iso, # For a new event, this is its creation time
         "current_status": "active", # Initial status for a new event
         "original_event_details_if_rescheduled": None,
         "rescheduled_event_details_if_deferred": None,
         "processing_tags": [], # Internal tags for this run, e.g. ['newly_added', 'became_deferred']
-        "last_alert_type": "new", # Default for a brand new entry
-        "last_alert_timestamp": current_time_iso # Timestamp of this initial "new" alert
+        "last_alert_type": "new", # Per plan: "new" for any event first added
+        "last_alert_timestamp": current_time_iso # Per plan: set to first_seen_timestamp
     }
 
 def get_event_datetime(event_data):
@@ -222,287 +222,377 @@ def process_event_changes(api_events, seen_events_db):
     current_run_iso_time = datetime.now().isoformat()
     
     processed_event_ids_this_run = set()
-    newly_added_event_ids = []
-    newly_deferred_event_ids = [] 
-    newly_rescheduled_pairs = [] 
+    # These lists are for the "since_last_run" updates.
+    newly_added_event_ids_this_run = [] 
+    newly_deferred_event_ids_this_run = []
+    # This list will store tuples of (original_deferred_event_id, new_rescheduled_event_id)
+    # It helps in generating annotations later.
+    newly_rescheduled_pairs_this_run = []
+
 
     # Pass 1: Update existing events and identify new ones / newly deferred
     for current_event_obj in api_events:
         event_id = str(current_event_obj['EventId'])
         processed_event_ids_this_run.add(event_id)
         
+        is_deferred_api = current_event_obj.get("EventAgendaStatusName") == "Deferred"
+
         if event_id not in seen_events_db:
             seen_events_db[event_id] = initialize_seen_event_entry(current_event_obj, current_run_iso_time)
-            # last_alert_type and last_alert_timestamp are set by initialize_seen_event_entry for new events
+            # last_alert_type and last_alert_timestamp are set by initialize_seen_event_entry
             seen_events_db[event_id]["processing_tags"].append('newly_added')
-            newly_added_event_ids.append(event_id)
+            newly_added_event_ids_this_run.append(event_id)
             logger.info(f"New event added: ID {event_id} - {current_event_obj.get('EventBodyName')}")
+
+            # If a new event is ALREADY deferred when first seen (unlikely, but handle)
+            if is_deferred_api:
+                stored_entry = seen_events_db[event_id]
+                stored_entry["current_status"] = "deferred_pending_match"
+                stored_entry["last_alert_type"] = "deferred" # Override from 'new' if born deferred
+                stored_entry["last_alert_timestamp"] = current_run_iso_time # Timestamp of deferral
+                stored_entry["last_significant_change_timestamp"] = current_run_iso_time
+                stored_entry["processing_tags"].append('became_deferred_on_first_seen')
+                newly_deferred_event_ids_this_run.append(event_id) # Also treat as newly deferred for "since last run"
+                logger.info(f"Event ID {event_id} was 'Deferred' on first sight. Marked as 'deferred_pending_match'.")
+
         else:
             stored_entry = seen_events_db[event_id]
             stored_entry["last_seen_timestamp"] = current_run_iso_time 
             stored_entry["processing_tags"] = [] # Reset for current run
 
             significant_data_change_occurred = check_significant_event_data_change(current_event_obj, stored_entry["event_data"])
+            
+            previous_status = stored_entry["current_status"]
+            status_changed_to_deferred_this_run = False
+
             if significant_data_change_occurred:
                 logger.info(f"Significant change detected for EventId {event_id}")
+                # Before updating event_data, check if it's a deferral change
+                if is_deferred_api and previous_status == "active":
+                    logger.info(f"EventId {event_id} status changed to Deferred.")
+                    stored_entry["current_status"] = "deferred_pending_match"
+                    stored_entry["last_alert_type"] = "deferred" # Set alert type to deferred
+                    stored_entry["last_alert_timestamp"] = current_run_iso_time # Timestamp of this deferral
+                    stored_entry["processing_tags"].append('became_deferred')
+                    newly_deferred_event_ids_this_run.append(event_id)
+                    status_changed_to_deferred_this_run = True
+                elif not is_deferred_api and previous_status.startswith("deferred_"):
+                    logger.info(f"EventId {event_id} was {previous_status}, now active (e.g. 'Final'). EventData: {current_event_obj}")
+                    stored_entry["current_status"] = "active"
+                    # IMPORTANT: If a deferred event becomes active again (e.g. due to API correction or status reverting to Final/Adjourned)
+                    # We do NOT change its last_alert_type or last_alert_timestamp. It was deferred, that alert stands.
+                    # If it's a NEW date, it will be treated like any other data change.
+                    # The 'Upcoming Hearings' will show its current active state.
+                    # The 'Updates' list will still show its 'deferred' alert based on its original deferral timestamp.
+                    stored_entry["processing_tags"].append('deferral_reverted_to_active')
+
                 stored_entry["event_data"] = current_event_obj 
                 stored_entry["last_significant_change_timestamp"] = current_run_iso_time
-                stored_entry["processing_tags"].append('data_changed')
-                # Note: Simple data changes on active events don't currently update last_alert_type/timestamp
-                # unless it leads to a status change below.
-
-            current_api_status = current_event_obj.get('EventAgendaStatusName')
-            stored_status = stored_entry["current_status"]
-
-            if stored_status == "active" and current_api_status == "Deferred":
-                logger.info(f"Event ID {event_id} status changed from active to Deferred.")
+                if not status_changed_to_deferred_this_run : # Avoid double-tagging if already tagged as deferred
+                     stored_entry["processing_tags"].append('data_changed')
+            
+            # If not a significant data change, but status in API is Deferred and we have it as active
+            # This can happen if only EventAgendaStatusName changed.
+            elif is_deferred_api and stored_entry["current_status"] == "active":
+                logger.info(f"EventId {event_id} status (only) changed to Deferred.")
                 stored_entry["current_status"] = "deferred_pending_match"
+                stored_entry["last_alert_type"] = "deferred" # Set alert type to deferred
+                stored_entry["last_alert_timestamp"] = current_run_iso_time # Timestamp of this deferral
+                stored_entry["event_data"]["EventAgendaStatusName"] = "Deferred" # Ensure this is updated
                 stored_entry["last_significant_change_timestamp"] = current_run_iso_time
-                stored_entry["last_alert_type"] = "deferred_initial"
-                stored_entry["last_alert_timestamp"] = current_run_iso_time
                 stored_entry["processing_tags"].append('became_deferred')
-                newly_deferred_event_ids.append(event_id)
-            elif stored_status == "deferred_pending_match" and current_api_status != "Deferred":
-                logger.info(f"Event ID {event_id} was deferred_pending_match, but API status is now '{current_api_status}'. Reverting to active.")
-                stored_entry["current_status"] = "active"
-                stored_entry["last_significant_change_timestamp"] = current_run_iso_time
-                # This reversion might be considered a new "active" alert or just a data correction.
-                # For now, let's assume it will be picked up if it qualifies as "new" again due to date changes, or if it was the target of a deferral.
-                # If it was simply reverted, it may not create a new explicit alert beyond data_changed.
-                stored_entry["last_alert_type"] = "data_changed_reverted_deferral" # Or a more generic type
-                stored_entry["last_alert_timestamp"] = current_run_iso_time
-                stored_entry["processing_tags"].append('data_changed') 
-                stored_entry["processing_tags"].append('reverted_from_deferred')
-            elif significant_data_change_occurred and stored_status == "active":
-                 # If it was active and had significant data changes (but not status to Deferred)
-                 # We could also give this its own alert type, e.g., "active_data_updated"
-                 # stored_entry["last_alert_type"] = "active_data_updated"
-                 # stored_entry["last_alert_timestamp"] = current_run_iso_time
-                 pass # For now, simple data changes on active events don't generate a new separate alert for 7/30 day lists by default
+                newly_deferred_event_ids_this_run.append(event_id)
 
+            # Mark as processed for this run
             stored_entry["last_processed_timestamp"] = current_run_iso_time
 
-    # Pass 2: Attempt to match deferred events to newly added events
-    newly_added_events_this_run_entries = [seen_events_db[eid] for eid in newly_added_event_ids]
-    deferred_events_pending_match = { eid: entry for eid, entry in seen_events_db.items() if entry["current_status"] == "deferred_pending_match"}
-    logger.info(f"Attempting to match {len(deferred_events_pending_match)} deferred events with {len(newly_added_events_this_run_entries)} newly added events.")
-    newly_added_events_this_run_entries.sort(key=lambda x: get_event_datetime(x['event_data']) or datetime.max)
-
-    for def_id, def_entry in deferred_events_pending_match.items():
-        def_event_data = def_entry["event_data"]
-        def_event_dt = get_event_datetime(def_event_data)
-
-        potential_matches = []
-        for new_event_entry in newly_added_events_this_run_entries:
-            new_event_id = str(new_event_entry['event_data']['EventId'])
-            if new_event_id == def_id: continue # Cannot match with itself
-
-            new_event_data = new_event_entry['event_data']
-            new_event_dt = get_event_datetime(new_event_data)
-
-            if not new_event_dt or not def_event_dt or new_event_dt < def_event_dt:
-                continue # New event must have a date and be on or after the deferred event's date
-
-            # Heuristic: Body name must be identical
-            if def_event_data.get("EventBodyName") != new_event_data.get("EventBodyName"):
-                continue
-            
-            # Heuristic: EventComment must be identical (if both exist)
-            # If one has a comment and the other doesn't, they don't match. If both null, they match on comment.
-            def_comment = def_event_data.get("EventComment")
-            new_comment = new_event_data.get("EventComment")
-            if def_comment != new_comment:
-                continue
-
-            # If all heuristics pass, it's a potential match
-            potential_matches.append(new_event_entry)
-        
-        # Select the best match (earliest valid new date)
-        if potential_matches:
-            # Already sorted by date, so the first one is the best by date.
-            best_match_entry = potential_matches[0]
-            best_match_id = str(best_match_entry['event_data']['EventId'])
-            
-            logger.info(f"Matched deferred Event ID {def_id} to new Event ID {best_match_id}")
-            def_entry["current_status"] = "deferred_rescheduled"
-            def_entry["rescheduled_event_details_if_deferred"] = {
-                "original_event_id": def_id,
-                "new_event_id": best_match_id,
-                "new_date": best_match_entry["event_data"].get("EventDate"),
-                "new_time": best_match_entry["event_data"].get("EventTime"),
-                "match_timestamp": current_run_iso_time
-            }
-            def_entry["last_significant_change_timestamp"] = current_run_iso_time
-            def_entry["last_alert_type"] = "deferred_rescheduled"
-            def_entry["last_alert_timestamp"] = current_run_iso_time
-            def_entry["processing_tags"].append('became_rescheduled_match_found_for_original')
-
-            best_match_entry["original_event_details_if_rescheduled"] = {
-                "original_event_id": def_id,
-                "original_date": def_event_data.get("EventDate"),
-                "original_time": def_event_data.get("EventTime"),
-                "match_timestamp": current_run_iso_time
-            }
-            # If the target was also newly_added this run, its initial last_alert_type was "new". 
-            # We update it to reflect it's primarily a reschedule target now.
-            if 'newly_added' in best_match_entry.get("processing_tags", []):
-                best_match_entry["last_alert_type"] = "rescheduled_as_new"
-                best_match_entry["last_alert_timestamp"] = best_match_entry['first_seen_timestamp'] # Alert is from when it was first seen
-            
-            best_match_entry["processing_tags"].append('newly_added_as_reschedule_target')
-            best_match_entry["last_significant_change_timestamp"] = current_run_iso_time # Also a significant change for the target
-
-            newly_rescheduled_pairs.append((def_id, best_match_id))
-            
-            # Remove from newly_added_event_ids if it was consumed as a reschedule target,
-            # so it doesn't also appear as a simple "new" event in some contexts if we only use that list.
-            # However, its 'newly_added' tag will persist on the entry itself.
-            if best_match_id in newly_added_event_ids:
-                 # We don't remove it from newly_added_event_ids because it *is* new, just also a reschedule.
-                 # generate_output_for_webpage will use processing_tags to differentiate.
-                 pass
-
-    # Pass 3: Handle old deferred events that didn't find a match - check grace period
-    grace_period_delta = timedelta(days=APP_CONFIG.get('deferred_match_grace_period_days', DEFAULT_DEFERRED_MATCH_GRACE_PERIOD_DAYS))
-    current_datetime = datetime.now()
+    # Pass 2: Process deferred events - attempt to match them
+    # Build lists of potential new events and currently deferred events
+    potential_new_reschedule_targets = []
+    deferred_events_awaiting_match = []
 
     for event_id, entry in seen_events_db.items():
-        if entry["current_status"] == "deferred_pending_match":
-            last_change_dt = datetime.fromisoformat(entry["last_significant_change_timestamp"])
-            if current_datetime - last_change_dt > grace_period_delta:
-                logger.info(f"Event ID {event_id} (deferred_pending_match) exceeded grace period. Moving to deferred_nomatch.")
-                entry["current_status"] = "deferred_nomatch"
-                entry["last_significant_change_timestamp"] = current_run_iso_time
-                entry["last_alert_type"] = "deferred_nomatch"
-                entry["last_alert_timestamp"] = current_run_iso_time
-                entry["processing_tags"].append('became_nomatch')
-
-    # Output counts for GitHub Action summary
-    # These counts are based on what happened *this run*
-    newly_added_pure_count = 0
-    for nid in newly_added_event_ids:
-        if not seen_events_db[nid].get("original_event_details_if_rescheduled"): # if it's not a target of a reschedule
-            newly_added_pure_count +=1
-
-    print(f"::set-output name=total_updates::{len(newly_added_event_ids) + len(newly_deferred_event_ids) + len(newly_rescheduled_pairs)}") # Simplistic sum for now
-    print(f"::set-output name=newly_added_count::{newly_added_pure_count}")
-    print(f"::set-output name=newly_deferred_count::{len(newly_deferred_event_ids)}") # Events that became deferred_pending_match this run
-    print(f"::set-output name=newly_rescheduled_count::{len(newly_rescheduled_pairs)}") # Pairs matched this run
+        # Only consider events seen or updated this run OR already in a deferred_pending_match state
+        if entry["last_processed_timestamp"] == current_run_iso_time or entry["current_status"] == "deferred_pending_match":
+            if entry["current_status"] == "active" and 'newly_added' in entry["processing_tags"]:
+                 # Check if it has a date; events without date cannot be targets
+                if entry["event_data"].get("EventDate"):
+                    potential_new_reschedule_targets.append(entry)
+            elif entry["current_status"] == "deferred_pending_match":
+                deferred_events_awaiting_match.append(entry)
     
-    logger.info(f"Finished processing event changes. Total unique events processed in API feed: {len(processed_event_ids_this_run)}")
-    logger.info(f"DB size: {len(seen_events_db)}")
-    logger.info(f"Newly added (and not a reschedule target immediately): {newly_added_pure_count}")
-    logger.info(f"Became deferred this run: {len(newly_deferred_event_ids)}")
-    logger.info(f"Matched as reschedules this run: {len(newly_rescheduled_pairs)}")
+    # Sort potential new events by their datetime (earliest first)
+    potential_new_reschedule_targets.sort(key=lambda x: get_event_datetime(x["event_data"]) or datetime.max)
 
-    return seen_events_db, newly_added_event_ids, newly_deferred_event_ids, newly_rescheduled_pairs
+    logger.info(f"Attempting to match {len(deferred_events_awaiting_match)} deferred events with {len(potential_new_reschedule_targets)} potential new reschedule targets.")
+
+    matched_new_event_ids = set() # To ensure a new event is not matched to multiple deferred ones
+
+    for deferred_entry in deferred_events_awaiting_match:
+        deferred_event_id = str(deferred_entry["event_data"]["EventId"])
+        best_match_found = None
+        
+        deferred_event_dt = get_event_datetime(deferred_entry["event_data"])
+        if not deferred_event_dt: # Should not happen if it was 'active' then 'deferred'
+            logger.warning(f"Deferred event {deferred_event_id} has no valid original datetime. Skipping match attempt.")
+            continue
+
+        for new_event_entry in potential_new_reschedule_targets:
+            new_event_id = str(new_event_entry["event_data"]["EventId"])
+            if new_event_id == deferred_event_id: # Cannot be rescheduled to itself
+                continue
+            if new_event_id in matched_new_event_ids: # Already used as a match
+                continue
+
+            # Basic Heuristics for matching:
+            # 1. Must be the same EventBodyName
+            if new_event_entry["event_data"].get("EventBodyName") != deferred_entry["event_data"].get("EventBodyName"):
+                continue
+
+            # 2. New event's date must be after the deferred event's date
+            new_event_dt = get_event_datetime(new_event_entry["event_data"])
+            if not new_event_dt or new_event_dt <= deferred_event_dt:
+                continue
+            
+            # 3. EventComment must be identical (if both exist) or new one can be empty if old one was too.
+            #    If one has a comment and the other doesn't, they are not a match.
+            old_comment = deferred_entry["event_data"].get("EventComment", "").strip()
+            new_comment = new_event_entry["event_data"].get("EventComment", "").strip()
+            if old_comment != new_comment:
+                continue
+            
+            # If multiple new events could match, we prefer the one with the earliest valid date.
+            # potential_new_reschedule_targets is already sorted by date.
+            best_match_found = new_event_entry
+            break # Found the best match for this deferred_entry
+
+        if best_match_found:
+            matched_new_event_id = str(best_match_found["event_data"]["EventId"])
+            logger.info(f"EventId {deferred_event_id} (deferred) matched with new EventId {matched_new_event_id}.")
+            
+            # Update the original deferred event
+            deferred_entry["current_status"] = "deferred_rescheduled_internal" # Internal status
+            deferred_entry["rescheduled_event_details_if_deferred"] = {
+                "matched_event_id": matched_new_event_id,
+                "new_date": best_match_found["event_data"].get("EventDate"),
+                "new_time": best_match_found["event_data"].get("EventTime"),
+                "new_location": best_match_found["event_data"].get("EventLocation"),
+                "match_timestamp": current_run_iso_time
+            }
+            # CRITICAL: deferred_entry's last_alert_type and last_alert_timestamp DO NOT CHANGE.
+            deferred_entry["processing_tags"].append('became_rescheduled_match_found_for_original')
+            deferred_entry["last_significant_change_timestamp"] = current_run_iso_time
+
+
+            # Update the new event that is the reschedule target
+            best_match_found["original_event_details_if_rescheduled"] = {
+                "original_event_id": deferred_event_id,
+                "original_date": deferred_entry["event_data"].get("EventDate"),
+                "original_time": deferred_entry["event_data"].get("EventTime"),
+                "original_status_when_deferred": "Deferred", 
+                "match_timestamp": current_run_iso_time
+            }
+            best_match_found["processing_tags"].append('newly_added_as_reschedule_target')
+            # CRITICAL: best_match_found's last_alert_type ("new") and last_alert_timestamp (its first_seen) DO NOT CHANGE.
+            
+            newly_rescheduled_pairs_this_run.append({
+                "deferred_event_id": deferred_event_id,
+                "rescheduled_to_event_id": matched_new_event_id,
+                "deferred_event_data_at_deferral": deferred_entry["event_data"], # For context in updates
+                "rescheduled_event_data": best_match_found["event_data"] # For context
+            })
+            matched_new_event_ids.add(matched_new_event_id)
+        else:
+            # No match found for this deferred_entry in this run.
+            # Check if grace period for matching has expired.
+            grace_period_days = APP_CONFIG.get('deferred_match_grace_period_days', DEFAULT_DEFERRED_MATCH_GRACE_PERIOD_DAYS)
+            # last_alert_timestamp for a deferred event is when it became deferred.
+            deferred_timestamp_dt = datetime.fromisoformat(deferred_entry["last_alert_timestamp"])
+            if datetime.now() > deferred_timestamp_dt + timedelta(days=grace_period_days):
+                if deferred_entry["current_status"] == "deferred_pending_match": # Only transition if it's still pending
+                    deferred_entry["current_status"] = "deferred_nomatch_internal"
+                    # CRITICAL: This transition does NOT change last_alert_type or last_alert_timestamp.
+                    # It also does NOT generate a new item for "updates since last run".
+                    deferred_entry["processing_tags"].append('became_nomatch_after_grace_period')
+                    deferred_entry["last_significant_change_timestamp"] = current_run_iso_time
+                    logger.info(f"EventId {deferred_event_id} (deferred) exceeded grace period, marked as 'deferred_nomatch_internal'.")
+
+    # Pass 3: Mark events not seen in this API pull as 'archived' if they were 'active'
+    # This is less critical now that we have a large lookback, but good for hygiene.
+    # Or, if they were 'deferred_pending_match' or 'deferred_rescheduled_internal' and suddenly disappear from API,
+    # it's an anomaly. For now, we don't change their status aggressively based on absence alone,
+    # as they might reappear. The grace period handles 'deferred_pending_match'.
+    # 'deferred_rescheduled_internal' implies a match was made; the new event is now the active one.
+    # If the *original* deferred event disappears, its 'deferred_rescheduled_internal' status is still informative.
+
+    for event_id, entry in seen_events_db.items():
+        if event_id not in processed_event_ids_this_run:
+            # This event was in our DB but not in the latest API pull
+            if entry["current_status"] == "active":
+                # Consider if this should change status or just be noted.
+                # For now, if it's active and disappears, it's unusual. Log it.
+                # entry["current_status"] = "archived_vanished_while_active" 
+                # entry["last_significant_change_timestamp"] = current_run_iso_time
+                entry["processing_tags"].append('vanished_from_api_while_active')
+                logger.warning(f"EventId {event_id} was 'active' but not found in current API pull (within lookback). Status not changed, tagged.")
+            elif entry["current_status"] == "deferred_pending_match":
+                # If it's pending match and vanishes, it's similar to grace period expiry, but faster.
+                # The grace period logic based on last_alert_timestamp should handle this eventually.
+                # For now, just tag it.
+                entry["processing_tags"].append('vanished_from_api_while_deferred_pending')
+                logger.warning(f"EventId {event_id} was 'deferred_pending_match' but not found in current API pull. Tagged.")
+
+
+    logger.info(f"Processed {len(processed_event_ids_this_run)} events from API data.")
+    logger.info(f"Found {len(newly_added_event_ids_this_run)} newly added events this run.")
+    logger.info(f"Found {len(newly_deferred_event_ids_this_run)} events newly deferred this run.")
+    logger.info(f"Found {len(newly_rescheduled_pairs_this_run)} newly rescheduled pairs this run.")
+
+    return seen_events_db, newly_added_event_ids_this_run, newly_deferred_event_ids_this_run, newly_rescheduled_pairs_this_run
 
 
 def generate_output_for_webpage(seen_events_db, newly_added_ids_this_run, newly_deferred_ids_this_run, newly_rescheduled_pairs_this_run):
+    """
+    Generates the structured data for `processed_events_for_web.json`.
+    The 'type' field in the output maps to `last_alert_type` from `seen_events_db`
+    for 7/30 day lists. For "since_last_run", it's determined by the specific lists passed in.
+    """
     logger.info("Generating output for web page...")
+    
+    all_upcoming_hearings = []
+    updates_since_last_run = []
+    updates_last_7_days = []
+    updates_last_30_days = []
 
-    today_date = datetime.now().date()
-    seven_days_ago_dt = datetime.now() - timedelta(days=7)
-    thirty_days_ago_dt = datetime.now() - timedelta(days=30)
-    min_datetime_for_sort = datetime.min
+    today_dt = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    current_run_iso_time = datetime.now().isoformat() # For comparing timestamps
 
-    # --- 1. Upcoming Hearings List ---
-    upcoming_hearings_list = []
-    for entry_id, entry in seen_events_db.items():
-        status = entry['current_status']
-        if status == 'active':
-            event_dt_obj = get_event_datetime(entry['event_data'])
-            if event_dt_obj and event_dt_obj.date() >= today_date:
-                upcoming_hearings_list.append(entry)
-    upcoming_hearings_list.sort(key=lambda x: (get_event_datetime(x['event_data']) or min_datetime_for_sort))
-    logger.info(f"Generated upcoming_hearings_list with {len(upcoming_hearings_list)} events.")
-
-    # --- Helper for creating wrapped updates ---
-    def create_wrapped_update(update_item_dict, alert_timestamp_iso_str, event_data_for_event_date):
-        event_dt = get_event_datetime(event_data_for_event_date)
+    # Helper to create a consistent "wrapped" update item structure
+    # This is mostly for the "updates_since_last_run" list
+    def create_wrapped_update_for_last_run(entry_id, type_for_last_run):
+        entry = seen_events_db[entry_id]
+        # For "since_last_run", the effective alert timestamp is 'now' or when the event happened this run.
+        # For 'newly_added', last_alert_timestamp is its first_seen.
+        # For 'newly_deferred', last_alert_timestamp is when it became deferred.
         return {
-            "item": update_item_dict,
-            "alert_dt_iso": alert_timestamp_iso_str,
-            "event_dt_for_sort": event_dt if event_dt else min_datetime_for_sort
+            "type": type_for_last_run, # "new" or "deferred" for "since_last_run" items
+            "alert_timestamp": entry["last_alert_timestamp"], # This is the key for sorting and filtering
+            "data": entry 
         }
 
-    # --- 2. Updates Since Last Run ---
-    updates_since_last_run_wrapped = []
-    
+    # 1. Populate "Updates - Since Last Run"
+    # These are events that became "new" or "deferred" *during this specific run*.
     for event_id in newly_added_ids_this_run:
         entry = seen_events_db[event_id]
-        event_dt = get_event_datetime(entry['event_data'])
-        # If it was also a reschedule target, its last_alert_type would be 'rescheduled_as_new'
-        # Otherwise, it's 'new'
-        alert_type_for_item = entry.get('last_alert_type', 'new') 
-        if alert_type_for_item == 'rescheduled_as_new' or alert_type_for_item == 'new':
-            if event_dt and event_dt.date() >= today_date:
-                item_dict = {"type": alert_type_for_item, "data": entry}
-                updates_since_last_run_wrapped.append(create_wrapped_update(item_dict, entry['last_alert_timestamp'], entry['event_data']))
-    
-    for event_id in newly_deferred_ids_this_run: # Became deferred_pending_match this run
-        entry = seen_events_db[event_id]
-        item_dict = {"type": "deferred_initial", "data": entry} # Corresponds to last_alert_type "deferred_initial"
-        updates_since_last_run_wrapped.append(create_wrapped_update(item_dict, entry['last_alert_timestamp'], entry['event_data']))
-
-    for original_id, _ in newly_rescheduled_pairs_this_run: # Original event became deferred_rescheduled this run
-        original_entry = seen_events_db[original_id]
-        item_dict = {"type": "deferred_rescheduled", "data": original_entry} # Corresponds to last_alert_type "deferred_rescheduled"
-        updates_since_last_run_wrapped.append(create_wrapped_update(item_dict, original_entry['last_alert_timestamp'], original_entry['event_data']))
-    
-    for entry_id, entry in seen_events_db.items():
-        if 'became_nomatch' in entry.get('processing_tags', []) and entry['current_status'] == 'deferred_nomatch':
-            # This indicates it transitioned to nomatch this run
-            item_dict = {"type": "deferred_nomatch", "data": entry} # Corresponds to last_alert_type "deferred_nomatch"
-            updates_since_last_run_wrapped.append(create_wrapped_update(item_dict, entry['last_alert_timestamp'], entry['event_data']))
-            
-    updates_since_last_run_wrapped.sort(key=lambda x: (datetime.fromisoformat(x['alert_dt_iso']), x['event_dt_for_sort']), reverse=True)
-    updates_since_last_run = [w['item'] for w in updates_since_last_run_wrapped]
-    logger.info(f"Generated updates_since_last_run with {len(updates_since_last_run)} items.")
-
-    # --- 3. Updates Last 7 Days & Last 30 Days ---
-    updates_last_7_days_wrapped = []
-    updates_last_30_days_wrapped = []
-
-    for entry_id, entry in seen_events_db.items():
-        alert_type = entry.get('last_alert_type')
-        alert_timestamp_iso = entry.get('last_alert_timestamp')
-        event_data = entry['event_data']
-
-        if not alert_type or not alert_timestamp_iso:
-            continue # Should not happen if initialized and processed correctly
-
-        # Apply date filter for specific alert types (new, rescheduled_as_new)
-        if alert_type in ["new", "rescheduled_as_new"]:
-            event_dt = get_event_datetime(event_data)
-            if not (event_dt and event_dt.date() >= today_date):
-                continue # Skip if past date for these types
+        # If it was added and immediately identified as a reschedule target, its last_alert_type is "new".
+        # If it was added and immediately identified as deferred (e.g. API shows "Deferred" on first sight),
+        # its last_alert_type will be "deferred".
+        # The `type_for_last_run` should reflect the primary alert this causes.
+        alert_type_for_this_update = entry["last_alert_type"] # Should be "new" or "deferred" (if born deferred)
+        updates_since_last_run.append(create_wrapped_update_for_last_run(event_id, alert_type_for_this_update))
         
-        alert_dt_obj = datetime.fromisoformat(alert_timestamp_iso)
-        current_update_item_dict = {"type": alert_type, "data": entry} # Use the definitive alert_type
-        wrapped_update = create_wrapped_update(current_update_item_dict, alert_timestamp_iso, event_data)
+    for event_id in newly_deferred_ids_this_run:
+        entry = seen_events_db[event_id]
+        # If an event was ALREADY in newly_added_ids_this_run (i.e. born deferred), don't add it again.
+        # The 'newly_added_ids_this_run' loop already picked it up with last_alert_type="deferred".
+        if event_id not in newly_added_ids_this_run:
+             updates_since_last_run.append(create_wrapped_update_for_last_run(event_id, "deferred"))
 
-        if alert_dt_obj >= thirty_days_ago_dt:
-            updates_last_30_days_wrapped.append(wrapped_update)
-            if alert_dt_obj >= seven_days_ago_dt:
-                updates_last_7_days_wrapped.append(wrapped_update)
 
-    updates_last_7_days_wrapped.sort(key=lambda x: (datetime.fromisoformat(x['alert_dt_iso']), x['event_dt_for_sort']), reverse=True)
-    updates_last_7_days = [w['item'] for w in updates_last_7_days_wrapped]
-    logger.info(f"Generated updates_last_7_days with {len(updates_last_7_days)} items.")
+    # Sort "Updates - Since Last Run" by alert timestamp (desc), then by EventDate (desc)
+    updates_since_last_run.sort(key=lambda x: (
+        x["alert_timestamp"], 
+        get_event_datetime(x["data"]["event_data"]) or datetime.min
+    ), reverse=True)
 
-    updates_last_30_days_wrapped.sort(key=lambda x: (datetime.fromisoformat(x['alert_dt_iso']), x['event_dt_for_sort']), reverse=True)
-    updates_last_30_days = [w['item'] for w in updates_last_30_days_wrapped]
-    logger.info(f"Generated updates_last_30_days with {len(updates_last_30_days)} items.")
-    
-    output_data = {
-        "generation_timestamp": datetime.now().isoformat(),
-        "upcoming_hearings": upcoming_hearings_list,
+
+    # 2. Populate "Upcoming Hearings" and "Updates - Last 7/30 Days"
+    for event_id, entry in seen_events_db.items():
+        event_data = entry.get("event_data", {})
+        event_dt = get_event_datetime(event_data)
+
+        # UPCOMING HEARINGS
+        # Must be 'active' and occur today or in the future.
+        if entry.get("current_status") == "active":
+            if event_dt and event_dt >= today_dt:
+                # Add user_facing_tags for the "Upcoming Hearings" cards
+                tags = []
+                if entry.get("last_alert_type") == "new" and \
+                   (datetime.fromisoformat(entry.get("last_alert_timestamp", "1970-01-01T00:00:00Z")) > (datetime.now() - timedelta(days=2))): # Approx last 48h
+                    tags.append("new_hearing_tag")
+                
+                if entry.get("original_event_details_if_rescheduled"):
+                    tags.append("rescheduled_hearing_tag")
+                
+                # Deferred tags for 'upcoming' only if it was deferred and then reverted to active with a new date
+                # This is complex. For now, simpler: only 'new' and 'rescheduled' tags on active upcoming.
+                # If it was 'deferred_rescheduled_internal', it's not 'active'.
+
+                entry_for_web = entry.copy() # Avoid modifying the main db entry
+                entry_for_web["user_facing_tags"] = tags
+                all_upcoming_hearings.append(entry_for_web)
+
+        # UPDATES - LAST 7/30 DAYS (based on last_alert_timestamp)
+        last_alert_type = entry.get("last_alert_type") # "new" or "deferred"
+        last_alert_ts_str = entry.get("last_alert_timestamp")
+
+        if last_alert_type and last_alert_ts_str:
+            try:
+                last_alert_dt = datetime.fromisoformat(last_alert_ts_str.replace('Z', '+00:00'))
+            except ValueError:
+                logger.error(f"Could not parse last_alert_timestamp: {last_alert_ts_str} for event {event_id}")
+                continue
+
+            update_item = {
+                "type": last_alert_type, # Directly use "new" or "deferred"
+                "alert_timestamp": last_alert_ts_str,
+                "data": entry
+            }
+
+            # Filter for "new" type: must be future or today dated for 7/30 day lists
+            # For "deferred" type, it's always included regardless of its original date, as the alert is about the deferral itself.
+            include_in_7_30_day_updates = False
+            if last_alert_type == "new":
+                if event_dt and event_dt >= today_dt:
+                    include_in_7_30_day_updates = True
+            elif last_alert_type == "deferred":
+                include_in_7_30_day_updates = True
+
+
+            if include_in_7_30_day_updates:
+                if datetime.now() - last_alert_dt <= timedelta(days=7):
+                    updates_last_7_days.append(update_item)
+                if datetime.now() - last_alert_dt <= timedelta(days=30):
+                    updates_last_30_days.append(update_item)
+
+    # Sort Upcoming Hearings by date (ascending)
+    all_upcoming_hearings.sort(key=lambda x: get_event_datetime(x["event_data"]) or datetime.max)
+
+    # Sort 7/30 day updates by alert_timestamp (desc), then by EventDate (desc)
+    key_func_sort_updates = lambda x: (
+        x["alert_timestamp"], 
+        get_event_datetime(x["data"]["event_data"]) or datetime.min
+    )
+    updates_last_7_days.sort(key=key_func_sort_updates, reverse=True)
+    updates_last_30_days.sort(key=key_func_sort_updates, reverse=True)
+
+
+    logger.info(f"Generated {len(all_upcoming_hearings)} upcoming hearings.")
+    logger.info(f"Generated {len(updates_since_last_run)} updates since last run.")
+    logger.info(f"Generated {len(updates_last_7_days)} updates for last 7 days.")
+    logger.info(f"Generated {len(updates_last_30_days)} updates for last 30 days.")
+
+    return {
+        "generation_timestamp": current_run_iso_time,
+        "upcoming_hearings": all_upcoming_hearings,
         "updates_since_last_run": updates_since_last_run,
         "updates_last_7_days": updates_last_7_days,
         "updates_last_30_days": updates_last_30_days,
+        # metadata about the source of these updates for traceability if needed
+        "source_newly_added_ids_count": len(newly_added_ids_this_run),
+        "source_newly_deferred_ids_count": len(newly_deferred_ids_this_run),
+        "source_newly_rescheduled_pairs_count": len(newly_rescheduled_pairs_this_run)
     }
-    return output_data
 
 
 def main():
