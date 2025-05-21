@@ -46,11 +46,10 @@ jobs:
       - name: Summarize results
         run: |
           echo "==== HEARING MONITOR RESULTS ===="
-          echo "Total changes: ${{ steps.check.outputs.total_changes || 0 }}"
-          echo "New events with dates: ${{ steps.check.outputs.new_with_dates || 0 }}"
-          echo "New events without dates: ${{ steps.check.outputs.new_without_dates || 0 }}"
-          echo "Rescheduled events: ${{ steps.check.outputs.rescheduled || 0 }}"
-          echo "Events with newly confirmed dates: ${{ steps.check.outputs.date_confirmed || 0 }}"
+          echo "Total items in 'Updates since last run': ${{ steps.check.outputs.total_updates || 0 }}"
+          echo "Newly Added Events (not reschedules): ${{ steps.check.outputs.newly_added_count || 0 }}"
+          echo "Newly Deferred Events (pending match): ${{ steps.check.outputs.newly_deferred_count || 0 }}"
+          echo "Newly Rescheduled (Deferred matched to New): ${{ steps.check.outputs.newly_rescheduled_count || 0 }}"
       
       - name: Commit changes and push
         run: |
@@ -59,6 +58,7 @@ jobs:
           
           # Add the seen events file and web page
           git add data/seen_events.json
+          git add data/processed_events_for_web.json
           git add docs/
           
           # Commit changes

@@ -134,48 +134,82 @@ class LegistarAPI:
         return self.get(f"matters/{matter_id}/sponsors")
     
     # Event-related methods
-    def get_events(self, top=10, skip=0, **filters):
+    def get_events(self, top=1000, **filters):
         """
-        Get events with pagination and optional filters
+        Get events with automatic pagination and optional filters.
+        The 'top' parameter now acts as page size for internal pagination.
         
         Args:
-            top (int): Number of records to return
-            skip (int): Number of records to skip
-            **filters: Additional filter parameters
+            top (int): Page size for API calls during pagination.
+            **filters: Additional filter parameters (e.g., date_range, EventBodyName).
             
         Returns:
-            list: List of events
+            list: Consolidated list of all events found.
         """
-        params = {
-            '$top': top,
-            '$skip': skip
-        }
-        
-        # Build filter string if filters are provided
-        if filters:
-            filter_parts = []
-            for key, value in filters.items():
-                if key == 'date_range':
-                    # Handle date range filter
-                    start_date, end_date = value
-                    start_date_str = start_date.isoformat().split('T')[0]
-                    end_date_str = end_date.isoformat().split('T')[0]
-                    filter_parts.append(f"EventDate ge datetime'{start_date_str}' and EventDate lt datetime'{end_date_str}'")
-                elif key.startswith('date_'):
-                    # Handle date filters
-                    field = key[5:]  # Remove 'date_' prefix
-                    operator = 'ge' if 'from' in field else 'lt'
-                    field = field.replace('_from', '').replace('_to', '')
-                    date_str = value.isoformat().split('T')[0]
-                    filter_parts.append(f"{field} {operator} datetime'{date_str}'")
-                else:
-                    # Handle other filters
-                    operator = 'eq'
-                    filter_parts.append(f"{key} {operator} {value}")
+        all_events = []
+        current_skip = 0
+        max_per_page = top # Use 'top' as the page size for requests
+
+        while True:
+            params = {
+                '$top': max_per_page,
+                '$skip': current_skip
+            }
             
-            params['$filter'] = ' and '.join(filter_parts)
-        
-        return self.get('events', params)
+            # Build filter string if filters are provided
+            # This part is slightly modified to ensure correct quoting for strings
+            if filters:
+                filter_parts = []
+                for key, value in filters.items():
+                    if key == 'date_range':
+                        start_date, end_date = value
+                        start_date_str = start_date.strftime('%Y-%m-%d')
+                        # For date_range, if end_date is None, it means open-ended future
+                        if end_date:
+                            end_date_str = end_date.strftime('%Y-%m-%d')
+                            filter_parts.append(f"EventDate ge datetime'{start_date_str}' and EventDate lt datetime'{end_date_str}'")
+                        else: # Open-ended future
+                            filter_parts.append(f"EventDate ge datetime'{start_date_str}'")
+                    elif key.startswith('date_'): # e.g. date_EventDate_from, date_EventDate_to
+                        field_parts = key.split('_') # ['date', 'EventDate', 'from']
+                        field_name = field_parts[1]
+                        comparison = field_parts[2]
+                        operator = 'ge' if comparison == 'from' else 'lt'
+                        # Ensure value is a datetime object if it's for a date field
+                        if isinstance(value, datetime):
+                            date_str = value.strftime('%Y-%m-%d')
+                            filter_parts.append(f"{field_name} {operator} datetime'{date_str}'")
+                        else: # Should not happen if used correctly
+                            print(f"Warning: Date filter for {key} received non-datetime value: {value}")
+                            # Attempt to use value as is, or skip this filter part
+                            # filter_parts.append(f"{field_name} {operator} datetime'{value}'") 
+                    else: # Handle other non-date filters
+                        operator = 'eq'
+                        if isinstance(value, str):
+                            # Escape single quotes within the string value itself
+                            escaped_value = value.replace("'", "''")
+                            filter_parts.append(f"{key} {operator} '{escaped_value}'")
+                        elif isinstance(value, (int, float, bool)):
+                             filter_parts.append(f"{key} {operator} {value}")
+                        else: # Fallback for other types, may or may not work depending on OData spec
+                            filter_parts.append(f"{key} {operator} {value}")
+
+                if filter_parts:
+                    params['$filter'] = ' and '.join(filter_parts)
+            
+            page_events = self.get('events', params)
+            
+            if page_events and isinstance(page_events, list):
+                all_events.extend(page_events)
+                if len(page_events) < max_per_page:
+                    # Fewer events than page size means it's the last page
+                    break
+                current_skip += len(page_events)
+            else:
+                # No events returned, or an error occurred (self.get would print it)
+                break
+                
+        return all_events
     
     def get_event(self, event_id):
         """Get details for a specific event"""
@@ -326,7 +360,7 @@ def main():
             end_date = datetime.strptime(args.end, '%Y-%m-%d')
             filters['date_range'] = (start_date, end_date)
         
-        result = api.get_events(top=args.top, skip=args.skip, **filters)
+        result = api.get_events(top=args.top, **filters)
     
     elif args.command == 'event-items':
         result = api.get_event_items(args.id)
