@@ -258,18 +258,18 @@ def generate_html_page_content(processed_data, page_title="NYC Legistar Hearing 
     if updates_to_display:
         for item in updates_to_display:
             html += generate_update_item_html(item)
-        else:
+    else:
         html += '<p class="text-muted">No updates since last check.</p>'
-
-        html += """
+    
+    html += """
                 </div> <!-- /updates-content -->
             </div> <!-- /col-md-4 updates-column -->
 
-            <!-- Upcoming Hearings Column (Right) -->
+                        <!-- Upcoming Hearings Column (Right) -->
             <div class="col-md-8">
                 <h4>Upcoming Hearings ({total_upcoming} total)</h4>
                 <div id="upcoming-hearings-content">
-    """
+"""
     if upcoming_hearings_paginated:
         for event_entry in upcoming_hearings_paginated:
             html += generate_event_card(event_entry)
@@ -277,8 +277,8 @@ def generate_html_page_content(processed_data, page_title="NYC Legistar Hearing 
         html += '<p>No hearings on this page. Try a different page number.</p>'
     else:
         html += '<p class="text-muted">No upcoming hearings found.</p>'
-
-        html += """
+    
+    html += """
                 </div> <!-- /upcoming-hearings-content -->
 """
     # Pagination
