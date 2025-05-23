@@ -330,13 +330,13 @@ def generate_html_page_content(processed_data, page_title="NYC Legistar Hearing 
                 </div>
                 <div id="updates-content">
 """
-        if updates_to_display:
+    if updates_to_display:
         for item in updates_to_display:
             html += generate_update_item_html(item)
-        else:
+    else:
         html += '                    <p class="text-muted">No updates for selected period.</p>'
 
-        html += """
+    html += """
                 </div> <!-- /updates-content -->
             </div> <!-- /col-md-4 updates-column -->
 
@@ -353,7 +353,7 @@ def generate_html_page_content(processed_data, page_title="NYC Legistar Hearing 
     else:
         html += '                    <p class="text-muted">No upcoming hearings found.</p>'
 
-        html += """
+    html += """
                 </div> <!-- /upcoming-hearings-content -->
 """
     html += generate_pagination_html(current_page, total_pages) # Simpler call, JS will add filter
