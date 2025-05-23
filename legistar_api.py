@@ -186,8 +186,8 @@ class LegistarAPI:
                             else:
                                 # If end_date is specified and different, use it for the upper bound (exclusive lt)
                                 end_date_str = end_date.strftime('%Y-%m-%d') # Or (end_date + timedelta(days=1)) if API expects exclusive upper for ranges too.
-                                                                         # Assuming API handles EventDate lt specific_end_date correctly for ranges.
-                                                                         # For safety and consistency with single day, let's make end_date for lt exclusive.
+                                                                             # Assuming API handles EventDate lt specific_end_date correctly for ranges.
+                                                                             # For safety and consistency with single day, let's make end_date for lt exclusive.
                                 end_date_exclusive_str = (end_date + timedelta(days=1)).strftime('%Y-%m-%d')
                                 filter_parts.append(f"EventDate ge datetime'{start_date_str}' and EventDate lt datetime'{end_date_exclusive_str}'")
                         else: # Open-ended future (end_date is None)
@@ -216,7 +216,7 @@ class LegistarAPI:
                         else: # Fallback for other types, may or may not work depending on OData spec
                             print(f"Warning: Unhandled filter type for key {key}, value {value}. Attempting to use as is.")
                             filter_parts.append(f"{key} {operator} {value}")
-
+            
                 # Add pre-formed filter conditions if they were provided
                 if additional_raw_filters:
                     filter_parts.extend(additional_raw_filters)

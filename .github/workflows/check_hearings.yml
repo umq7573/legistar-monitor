@@ -24,10 +24,9 @@ jobs:
           mkdir -p data
           # Try to fetch the gh-pages branch. If it doesn't exist, this will fail gracefully.
           git fetch origin gh-pages:gh-pages || echo "No gh-pages branch found or other fetch error. Will proceed without prior seen_events.json."
-          # Try to checkout seen_events.json from the fetched gh-pages branch into the data directory.
-          # If the branch or file doesn't exist on gh-pages, this command will fail, and seen_events.json will not be present in data/.
-          # The check_new_hearings.py script is expected to handle the absence of this file by creating a new one.
-          git checkout gh-pages -- data/seen_events.json || echo "data/seen_events.json not found on gh-pages branch, or gh-pages branch not available. A new one will be created if needed."
+          # Try to checkout seen_events.json from the correct path on gh-pages (docs/data/ since that's what we deploy)
+          # If the branch or file doesn't exist on gh-pages, create a fresh empty file.
+          git checkout gh-pages -- docs/data/seen_events.json && mv docs/data/seen_events.json data/seen_events.json || echo '{}' > data/seen_events.json
         
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -68,7 +67,7 @@ jobs:
         run: |
           mkdir -p docs/data # Ensure target directory exists within docs
           cp data/seen_events.json docs/data/seen_events.json
-          cp data/processed_events_for_web.json docs/data/processed_events_for_web.json # For debugging or if needed by a more complex page
+          cp data/processed_events_for_web.json docs/data/processed_events_for_web.json
         
       - name: Create .nojekyll file
         run: |

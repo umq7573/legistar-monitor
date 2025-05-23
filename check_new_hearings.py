@@ -21,7 +21,6 @@ CONFIG_FILE = "config.json" # Expects config.json in the root directory
 
 # Default values, can be overridden by config.json
 DEFAULT_LOOKBACK_DAYS = 365
-DEFAULT_DEFERRED_MATCH_GRACE_PERIOD_DAYS = 60
 
 # Global config dictionary
 APP_CONFIG = {}
@@ -30,7 +29,7 @@ def load_app_config():
     global APP_CONFIG
     config_defaults = {
         "lookback_days": DEFAULT_LOOKBACK_DAYS,
-        "deferred_match_grace_period_days": DEFAULT_DEFERRED_MATCH_GRACE_PERIOD_DAYS,
+        # "deferred_match_grace_period_days": DEFAULT_DEFERRED_MATCH_GRACE_PERIOD_DAYS, # Removed
         # "deferred_match_comment_similarity_threshold": DEFAULT_DEFERRED_MATCH_COMMENT_SIMILARITY_THRESHOLD, # No longer used
         # Add other future configurations here
     }
@@ -63,17 +62,12 @@ def load_seen_events():
     
     try:
         with open(HISTORY_FILE, 'r') as f:
-            raw_data = json.load(f)
+            data = json.load(f)
+        logger.info(f"Loaded {len(data)} events from history.")
+        return data
     except Exception as e:
-        logger.error(f"Error loading or parsing history file {HISTORY_FILE}: {e}. Starting fresh.")
+        logger.error(f"Error loading history file {HISTORY_FILE}: {e}. Starting fresh.")
         return {}
-
-    # Basic normalization: ensure all event ID keys are strings.
-    # Assumes the rest of the data structure is compatible if loaded successfully.
-    normalized_data = {str(k): v for k, v in raw_data.items()}
-            
-    logger.info(f"Loaded {len(normalized_data)} events from history.")
-    return normalized_data
 
 def save_seen_events(seen_events):
     """Save seen events to history file"""
@@ -300,15 +294,37 @@ def process_event_changes(api_events, seen_events_db, api):
     potential_new_reschedule_targets = []
     deferred_events_awaiting_match = []
 
+    # Define the cutoff for considering deferred events for matching
+    thirty_days_ago_dt = datetime.now() - timedelta(days=30) 
+
     for event_id, entry in seen_events_db.items():
         # Only consider events seen or updated this run OR already in a deferred_pending_match state
+        # Note: An event must have been processed in Pass 1 (last_processed_timestamp == current_run_iso_time)
+        # OR be an existing 'deferred_pending_match' event from a previous run to be considered here.
         if entry["last_processed_timestamp"] == current_run_iso_time or entry["current_status"] == "deferred_pending_match":
             if entry["current_status"] == "active" and 'newly_added' in entry["processing_tags"]:
                  # Check if it has a date; events without date cannot be targets
                 if entry["event_data"].get("EventDate"):
                     potential_new_reschedule_targets.append(entry)
             elif entry["current_status"] == "deferred_pending_match":
-                deferred_events_awaiting_match.append(entry)
+                try:
+                    # Ensure last_alert_timestamp is valid and parse it
+                    last_alert_ts_str = entry.get("last_alert_timestamp")
+                    if not last_alert_ts_str:
+                        logger.warning(f"EventId {event_id} is 'deferred_pending_match' but has no last_alert_timestamp. Skipping match attempt.")
+                        continue
+                    
+                    last_alert_dt = datetime.fromisoformat(last_alert_ts_str.replace('Z', '+00:00'))
+                    
+                    if last_alert_dt >= thirty_days_ago_dt:
+                        deferred_events_awaiting_match.append(entry)
+                    else:
+                        # Log that we are no longer attempting to match this old deferred event.
+                        # Its status remains 'deferred_pending_match', it just won't be actively matched
+                        # and will naturally fall off "Updates" lists due to its age.
+                        logger.info(f"EventId {event_id} (deferred on {last_alert_dt.date()}) is older than 30 days. No longer attempting to match.")
+                except ValueError:
+                    logger.error(f"Could not parse last_alert_timestamp: {entry.get('last_alert_timestamp')} for event {event_id} while checking match eligibility. Skipping.")
     
     # Sort potential new events by their datetime (earliest first)
     potential_new_reschedule_targets.sort(key=lambda x: get_event_datetime(x["event_data"]) or datetime.max)
@@ -345,8 +361,8 @@ def process_event_changes(api_events, seen_events_db, api):
             
             # 3. EventComment must be identical (if both exist) or new one can be empty if old one was too.
             #    If one has a comment and the other doesn't, they are not a match.
-            old_comment = deferred_entry["event_data"].get("EventComment", "").strip()
-            new_comment = new_event_entry["event_data"].get("EventComment", "").strip()
+            old_comment = (deferred_entry["event_data"].get("EventComment") or "").strip()
+            new_comment = (new_event_entry["event_data"].get("EventComment") or "").strip()
             if old_comment != new_comment:
                 continue
             
@@ -391,23 +407,10 @@ def process_event_changes(api_events, seen_events_db, api):
                 "rescheduled_event_data": best_match_found["event_data"] # For context
             })
             matched_new_event_ids.add(matched_new_event_id)
-        else:
-            # No match found for this deferred_entry in this run.
-            # Check if grace period for matching has expired.
-            grace_period_days = APP_CONFIG.get('deferred_match_grace_period_days', DEFAULT_DEFERRED_MATCH_GRACE_PERIOD_DAYS)
-            
-            # Assuming last_alert_timestamp exists and is valid if an event reaches this stage
-            # under the "clean pipeline" philosophy.
-            deferred_timestamp_dt = datetime.fromisoformat(deferred_entry["last_alert_timestamp"].replace('Z', '+00:00'))
-
-            if datetime.now() > deferred_timestamp_dt + timedelta(days=grace_period_days):
-                if deferred_entry["current_status"] == "deferred_pending_match": # Only transition if it's still pending
-                    deferred_entry["current_status"] = "deferred_nomatch_internal"
-                    # CRITICAL: This transition does NOT change last_alert_type or last_alert_timestamp.
-                    # It also does NOT generate a new item for "updates since last run".
-                    deferred_entry["processing_tags"].append('became_nomatch_after_grace_period')
-                    deferred_entry["last_significant_change_timestamp"] = current_run_iso_time
-                    logger.info(f"EventId {deferred_event_id} (deferred) exceeded grace period, marked as 'deferred_nomatch_internal'.")
+        # else: # No match found for this deferred_entry in this run.
+            # Grace period logic removed. A deferred event will remain deferred_pending_match indefinitely if no match is found.
+            # Its visibility in "Updates" is solely determined by its last_alert_timestamp.
+            # logger.info(f"EventId {deferred_event_id} (deferred) did not find a match this run. Remains 'deferred_pending_match'.")
 
     # Pass 3: Mark events not seen in this API pull as 'archived' if they were 'active'
     # This is less critical now that we have a large lookback, but good for hygiene.
