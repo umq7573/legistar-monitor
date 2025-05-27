@@ -40,11 +40,21 @@ def get_event_time_display(time_str):
     if not time_str:
         return "Time TBD"
     try:
-        # Assuming time_str is like "10:00 AM"
+        # Try parsing as "10:00 AM" format first
         dt_obj = datetime.strptime(time_str, '%I:%M %p')
         return dt_obj.strftime('%I:%M %p')
     except ValueError:
-        return time_str # Return as is if format is unexpected
+        try:
+            # Try parsing as "10:00:00" format (24-hour)
+            dt_obj = datetime.strptime(time_str, '%H:%M:%S')
+            return dt_obj.strftime('%I:%M %p')
+        except ValueError:
+            try:
+                # Try parsing as "10:00" format (24-hour without seconds)
+                dt_obj = datetime.strptime(time_str, '%H:%M')
+                return dt_obj.strftime('%I:%M %p')
+            except ValueError:
+                return time_str # Return as is if format is unexpected
 
 def generate_event_card(event_entry, is_update_card=False):
     """Generates HTML for a single event card."""
@@ -263,14 +273,8 @@ def generate_html_page_content(processed_data, page_title="NYC Legistar Hearing 
     end_index = start_index + ITEMS_PER_PAGE
     upcoming_hearings_paginated = upcoming_hearings_all[start_index:end_index]
 
-    html = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{page_title}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
+    # Create the CSS styles as a separate string to avoid f-string parsing issues
+    css_styles = """
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding-top: 20px; }
         .container-main { max-width: 1400px; }
         .updates-column { max-height: 90vh; overflow-y: auto; position: sticky; top: 20px; }
@@ -308,7 +312,16 @@ def generate_html_page_content(processed_data, page_title="NYC Legistar Hearing 
             white-space: nowrap;
             flex-shrink: 0;
         }
-    </style>
+    """
+
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{page_title}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>{css_styles}</style>
 </head>
 <body>
     <div class="container container-main">
