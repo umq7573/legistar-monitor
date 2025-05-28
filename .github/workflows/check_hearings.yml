@@ -24,9 +24,9 @@ jobs:
           mkdir -p data
           # Try to fetch the gh-pages branch. If it doesn't exist, this will fail gracefully.
           git fetch origin gh-pages:gh-pages || echo "No gh-pages branch found or other fetch error. Will proceed without prior seen_events.json."
-          # Try to checkout seen_events.json from the correct path on gh-pages (docs/data/ since that's what we deploy)
+          # Try to checkout seen_events.json from the correct path on gh-pages (data/ not docs/data/)
           # If the branch or file doesn't exist on gh-pages, create a fresh empty file.
-          git checkout gh-pages -- docs/data/seen_events.json && mv docs/data/seen_events.json data/seen_events.json || echo '{}' > data/seen_events.json
+          git checkout gh-pages -- data/seen_events.json || echo '{}' > data/seen_events.json
         
       - name: Set up Python
         uses: actions/setup-python@v4
